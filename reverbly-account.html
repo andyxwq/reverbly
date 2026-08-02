@@ -35,19 +35,25 @@
     </section>
   </main>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="reverbly-supabase-config.js"></script>
   <script>
-    const supabaseClient = supabase.createClient(
-      'https://vnqzknyxxdxtjlfzyqfh.supabase.co',
-      'sb_publishable_mKbX82lncbniQINpMLRrHQ_lZ7AJnCU'
-    );
+    const supabaseClient = window.reverblySupabaseClient;
+    const nextPage = new URLSearchParams(window.location.search).get('next') || 'reverbly-dashboard.html';
     const form = document.getElementById('trialForm');
     const message = document.getElementById('success');
     const trialLink = 'https://buy.stripe.com/test_eVq5kv34s38O3QneFmd7q00';
     let authenticated = false;
+    let activeSession = null;
+    function checkoutUrl(userId) {
+      const url = new URL(trialLink);
+      url.searchParams.set('client_reference_id', userId);
+      return url.toString();
+    }
 
     async function refreshAccount() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return;
+      activeSession = session;
       authenticated = true;
       document.getElementById('email').value = session.user.email || '';
       document.getElementById('email').disabled = true;
@@ -58,8 +64,8 @@
 
     form.addEventListener('submit', async event => {
       event.preventDefault();
-      if (authenticated) {
-        window.location.assign(trialLink);
+      if (authenticated && activeSession?.user?.id) {
+        window.location.assign(checkoutUrl(activeSession.user.id));
         return;
       }
       const email = document.getElementById('email').value;
@@ -68,7 +74,7 @@
       button.textContent = 'Sending sign-in link…';
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.href }
+        options: { emailRedirectTo: new URL(nextPage, window.location.href).toString() }
       });
       if (error) {
         message.textContent = error.message;

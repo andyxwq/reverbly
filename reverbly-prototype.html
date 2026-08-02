@@ -117,6 +117,7 @@
     <p class="legal">Only upload audio you own or are licensed to use. Reverbly does not grant rights to copyrighted recordings.</p>
   </main>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="reverbly-supabase-config.js"></script>
   <script>
     const audioFile = document.getElementById('audioFile'), dropzone = document.getElementById('dropzone');
     const chooseButton = document.getElementById('chooseButton'), fileName = document.getElementById('fileName');
@@ -124,7 +125,7 @@
     const speedValue = document.getElementById('speedValue'), reverbValue = document.getElementById('reverbValue'), fadeInValue = document.getElementById('fadeInValue'), fadeOutValue = document.getElementById('fadeOutValue'), loopValue = document.getElementById('loopValue');
     const playButton = document.getElementById('playButton'), stopButton = document.getElementById('stopButton'), exportButton = document.getElementById('exportButton');
     const notice = document.getElementById('notice'), canvas = document.getElementById('waveform'), ctx = canvas.getContext('2d'), time = document.getElementById('time'), seek = document.getElementById('seek'), setClipStart = document.getElementById('setClipStart'), clipStartValue = document.getElementById('clipStartValue'), presetName = document.getElementById('presetName'), savePreset = document.getElementById('savePreset'), savedPresetList = document.getElementById('savedPresetList');
-    const reverblyAuth = supabase.createClient('https://vnqzknyxxdxtjlfzyqfh.supabase.co', 'sb_publishable_mKbX82lncbniQINpMLRrHQ_lZ7AJnCU');
+    const reverblyAuth = window.reverblySupabaseClient;
     let context, audioBuffer, source, startedAt = 0, playOffset = 0, currentOffset = 0, clipStart = 0, dragHandle = null, animation, savedPresets = [], currentPlan = 'free';
     const historySettings = new URLSearchParams(location.search);
     const formatTime = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(Math.floor(seconds % 60)).padStart(2,'0')}`;
@@ -161,28 +162,58 @@
     function tick() { if(!source || !context) return; const elapsed=(context.currentTime-startedAt)*Number(speed.value)+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(tick); }
     function play() { if(!audioBuffer) return; if(!context) context=new AudioContext(); if(context.state==='suspended') context.resume(); if(source){ stop(false); return; } const end=previewEnd(); if(currentOffset>=end) currentOffset=clipStart; playOffset=currentOffset; source=graph(context,context.destination,currentOffset); source.onended=()=>stop(true); startedAt=context.currentTime; source.start(0,currentOffset,end-currentOffset); playButton.textContent='■ Pause'; tick(); }
     async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); const requestedClipStart=Number(historySettings.get('clipStart')); clipStart=loop.value==='0' || !Number.isFinite(requestedClipStart) ? 0 : Math.max(0,Math.min(requestedClipStart,audioBuffer.duration-Number(loop.value))); fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; setPosition(clipStart); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
+    function anonymousExportClientId() {
+      const storageKey = 'reverbly-anonymous-export-id';
+      const currentId = localStorage.getItem(storageKey);
+      if (currentId) return currentId;
+      const nextId = crypto.randomUUID();
+      localStorage.setItem(storageKey, nextId);
+      return nextId;
+    }
     async function checkExportAccess() {
       const { data: { session } } = await reverblyAuth.auth.getSession();
       if (!session) {
-        const today = new Date().toISOString().slice(0, 10);
-        if (localStorage.getItem('reverbly-free-export-date') === today) {
-          notice.textContent = 'Your free export for today has been used. Create an account to start a trial with unlimited exports.';
-          return false;
+        const { data, error } = await reverblyAuth.rpc('consume_export_anonymous', {
+          p_client_id: anonymousExportClientId()
+        });
+        const result = data?.[0];
+        if (error || !result?.allowed) {
+          return { allowed: false, message: result?.message || 'Export unavailable. Please try again.' };
         }
-        localStorage.setItem('reverbly-free-export-date', today);
-        notice.textContent = 'Your free export is ready.';
-        return true;
+        return { allowed: true, message: result.message };
       }
       const { data, error } = await reverblyAuth.rpc('consume_export');
       const result = data?.[0];
       if (error || !result?.allowed) {
-        notice.textContent = result?.message || 'Export unavailable. Please try again.';
-        return false;
+        return { allowed: false, message: result?.message || 'Export unavailable. Please try again.' };
       }
-      notice.textContent = result.message;
-      return true;
+      return { allowed: true, message: result.message };
     }
-    async function exportWav() { if(!audioBuffer || !(await checkExportAccess())) return; exportButton.disabled=true; notice.textContent='Rendering your WAV…'; const rate=Number(speed.value), length=Math.ceil(clipLength()/rate*audioBuffer.sampleRate); const offline=new OfflineAudioContext(2,length,audioBuffer.sampleRate); const src=graph(offline,offline.destination); src.start(0,clipStart,clipLength()); const rendered=await offline.startRendering(); const bytes=encodeWav(rendered), blob=new Blob([bytes],{type:'audio/wav'}), link=document.createElement('a'); const outputName=`reverbly-${fileName.textContent.replace(/^✓\s*/,'').replace(/\.[^.]+$/,'')}.wav`; link.href=URL.createObjectURL(blob); link.download=outputName; link.click(); URL.revokeObjectURL(link.href); notice.textContent='Your WAV download has started.'; await saveExportHistory(blob,outputName); exportButton.disabled=false; }
+    async function exportWav() {
+      if (!audioBuffer) return;
+      exportButton.disabled = true;
+      notice.textContent = 'Rendering your WAV…';
+      const rate = Number(speed.value), length = Math.ceil(clipLength() / rate * audioBuffer.sampleRate);
+      const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
+      const src = graph(offline, offline.destination);
+      src.start(0, clipStart, clipLength());
+      const rendered = await offline.startRendering();
+      const quota = await checkExportAccess();
+      if (!quota.allowed) {
+        notice.textContent = quota.message;
+        exportButton.disabled = false;
+        return;
+      }
+      const bytes = encodeWav(rendered), blob = new Blob([bytes], { type: 'audio/wav' }), link = document.createElement('a');
+      const outputName = `reverbly-${fileName.textContent.replace(/^✓\s*/,'').replace(/\.[^.]+$/,'')}.wav`;
+      link.href = URL.createObjectURL(blob);
+      link.download = outputName;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      notice.textContent = quota.message || 'Your WAV download has started.';
+      await saveExportHistory(blob, outputName);
+      exportButton.disabled = false;
+    }
     function encodeWav(buffer) { const channels=buffer.numberOfChannels, length=buffer.length*channels*2, ab=new ArrayBuffer(44+length), v=new DataView(ab); const put=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}; put(0,'RIFF');v.setUint32(4,36+length,true);put(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*channels*2,true);v.setUint16(32,channels*2,true);v.setUint16(34,16,true);put(36,'data');v.setUint32(40,length,true);let offset=44;for(let i=0;i<buffer.length;i++)for(let c=0;c<channels;c++){const s=Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]));v.setInt16(offset,s<0?s*0x8000:s*0x7fff,true);offset+=2;}return ab; }
     chooseButton.onclick=()=>audioFile.click(); audioFile.onchange=e=>load(e.target.files[0]); ['dragenter','dragover'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.add('drag')})); ['dragleave','drop'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.remove('drag')})); dropzone.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
     [speed,reverb,fadeIn,fadeOut,loop].forEach(input=>input.addEventListener('input',()=>{updateLabels();refreshClipStart();if(audioBuffer)setPosition(Math.min(Math.max(currentOffset,clipStart),previewEnd()));})); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;loop.value=btn.dataset.loop;if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event){const rect=canvas.getBoundingClientRect();return Math.max(0,Math.min(audioBuffer.duration,(event.clientX-rect.left)/rect.width*audioBuffer.duration));} canvas.onpointerdown=event=>{if(!audioBuffer)return;const point=pointAt(event);if(loop.value==='0'){setPosition(point);return;}const threshold=audioBuffer.duration*.025;if(Math.abs(point-clipStart)<threshold)dragHandle='start';else if(Math.abs(point-previewEnd())<threshold)dragHandle='end';else{clipStart=Math.min(point,audioBuffer.duration-clipLength());refreshClipStart();setPosition(clipStart);}canvas.setPointerCapture(event.pointerId);}; canvas.onpointermove=event=>{if(!dragHandle||!audioBuffer)return;const point=pointAt(event);if(dragHandle==='start')clipStart=Math.min(point,audioBuffer.duration-clipLength());else clipStart=Math.max(0,Math.min(point-clipLength(),audioBuffer.duration-clipLength()));refreshClipStart();setPosition(clipStart);}; canvas.onpointerup=event=>{if(!audioBuffer)return;dragHandle=null;canvas.releasePointerCapture(event.pointerId);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; setClipStart.onclick=()=>{if(!audioBuffer||loop.value==='0')return;clipStart=currentOffset;refreshClipStart();setPosition(clipStart);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=exportWav; savePreset.onclick=saveCurrentPreset; presetName.onkeydown=event=>{if(event.key==='Enter')saveCurrentPreset();}; applyHistorySettings(); updateLabels(); loadSavedPresets();
