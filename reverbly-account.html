@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Start your Reverbly trial</title>
+  <style>
+    :root { --ink:#f6f3ff; --muted:#b8b1cb; --surface:#181224; --line:#3b2e54; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; }
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(circle at 15% 5%,#3c2868 0,transparent 29rem),radial-gradient(circle at 90% 95%,#4f1e51 0,transparent 32rem),#0e0b17;font:16px/1.46 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(1050px,calc(100% - 36px));margin:auto;padding:25px 0 60px}.brand{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:22px;font-weight:760;letter-spacing:-.6px;text-decoration:none}.mark{display:grid;place-items:center;width:34px;height:34px;color:#190f2a;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--purple));box-shadow:0 0 36px #ad78ff85}.shell{display:grid;grid-template-columns:1fr .82fr;gap:18px;align-items:start;max-width:900px;margin:68px auto 0}.panel{padding:32px;border:1px solid var(--line);border-radius:21px;background:linear-gradient(145deg,#211936,#15101f);box-shadow:0 24px 55px #00000036}h1{margin:0 0 11px;font-size:42px;line-height:1.03;letter-spacing:-1.7px}h2{margin:0;font-size:20px}.muted{color:var(--muted)}.form{margin-top:30px}.label{display:block;margin:20px 0 8px;font-size:14px;font-weight:650}.input{width:100%;padding:13px 14px;border:1px solid #514167;border-radius:11px;outline:0;color:var(--ink);background:#100d19;font:inherit}.input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #9f7cff28}.check{display:flex;gap:10px;align-items:flex-start;margin:18px 0;color:#c6bed3;font-size:13px}.check input{margin-top:3px;accent-color:var(--pink)}.start{width:100%;border:0;border-radius:12px;padding:15px;color:#1b102a;background:linear-gradient(105deg,var(--pink),#bfa4ff);font:700 16px inherit;cursor:pointer}.safe{margin:15px 0 0;text-align:center;color:#9b90ae;font-size:12px}.safe span{color:var(--green)}.plan{position:relative;overflow:hidden}.plan:before{content:'';position:absolute;inset:-100px -80px auto auto;width:200px;height:200px;border-radius:50%;background:#a57aff30;filter:blur(4px)}.topline{position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.tag{padding:6px 10px;color:#cdb9ff;border:1px solid #6a5490;border-radius:999px;background:#2a2040;font-size:12px;font-weight:700}.price{margin:22px 0 6px;font-size:35px;font-weight:750;letter-spacing:-1.5px}.price small{font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0}.timeline{margin:28px 0;padding:0;list-style:none}.timeline li{position:relative;padding:0 0 22px 28px;color:#d8d1e4;font-size:14px}.timeline li:before{content:'';position:absolute;left:0;top:4px;width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px #84e8c11b}.timeline li:not(:last-child):after{content:'';position:absolute;left:5px;top:18px;width:2px;height:21px;background:#4a3d60}.timeline b{display:block;margin-bottom:2px;color:#fff}.note{padding:14px;border:1px solid #4a3c60;border-radius:12px;background:#151020;color:#bdb2cc;font-size:13px}.note strong{color:#f6f3ff}.links{display:flex;gap:14px;margin-top:19px;color:#cdbbff;font-size:13px}.links a{color:inherit;text-decoration:none}.success{display:none;margin-top:18px;padding:13px;border-radius:11px;color:#bcf8dd;background:#15352c;border:1px solid #38725f;font-size:14px}.success.show{display:block}@media(max-width:720px){.shell{grid-template-columns:1fr;margin-top:42px}.panel{padding:24px}h1{font-size:36px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="brand" href="reverbly-landing.html"><span class="mark">R</span>Reverbly</a>
+    <section class="shell">
+      <section class="panel">
+        <h1>Try Pro for 7 days.</h1>
+        <p class="muted">Create without limits. We’ll show the date you’ll be charged before you confirm.</p>
+        <form id="trialForm" class="form">
+          <label class="label" for="email">Email address</label>
+          <input class="input" id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <label class="check"><input id="terms" type="checkbox" required><span>I understand my trial becomes <strong>Reverbly Pro at $7/month</strong> after 7 days unless I cancel before then.</span></label>
+          <button class="start" type="submit">Send secure sign-in link →</button>
+          <p class="safe"><span>●</span> Your card details are handled securely by our payment provider.</p>
+          <p id="success" class="success" aria-live="polite"></p>
+        </form>
+      </section>
+      <aside class="panel plan">
+        <div class="topline"><h2>Reverbly Pro</h2><span class="tag">7-day trial</span></div>
+        <p class="price">$7 <small>/ month</small></p>
+        <ul class="timeline"><li><b>Today</b>Start your trial. You are not charged today.</li><li><b>In 4 days</b>We email a friendly reminder before your trial ends.</li><li><b>In 7 days</b>Your plan starts at $7/month unless you cancel.</li></ul>
+        <div class="note"><strong>Cancel anytime.</strong><br>Manage or cancel your subscription in your Reverbly account — no support request needed.</div>
+        <div class="links"><a href="reverbly-landing.html#pricing">Compare plans</a><a href="reverbly-prototype.html">Back to editor</a></div>
+      </aside>
+    </section>
+  </main>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseClient = supabase.createClient(
+      'https://vnqzknyxxdxtjlfzyqfh.supabase.co',
+      'sb_publishable_mKbX82lncbniQINpMLRrHQ_lZ7AJnCU'
+    );
+    const form = document.getElementById('trialForm');
+    const message = document.getElementById('success');
+    const trialLink = 'https://buy.stripe.com/test_eVq5kv34s38O3QneFmd7q00';
+    let authenticated = false;
+
+    async function refreshAccount() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
+      authenticated = true;
+      document.getElementById('email').value = session.user.email || '';
+      document.getElementById('email').disabled = true;
+      form.querySelector('button').textContent = 'Start 7-day trial →';
+      message.textContent = `Signed in as ${session.user.email}. Continue to Stripe to confirm your trial.`;
+      message.classList.add('show');
+    }
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (authenticated) {
+        window.location.assign(trialLink);
+        return;
+      }
+      const email = document.getElementById('email').value;
+      const button = form.querySelector('button');
+      button.disabled = true;
+      button.textContent = 'Sending sign-in link…';
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+      });
+      if (error) {
+        message.textContent = error.message;
+        message.style.background = '#401b2d';
+        message.style.borderColor = '#8b3b66';
+        message.style.color = '#ffd4e8';
+      } else {
+        message.textContent = `Check ${email} for your secure sign-in link. After signing in, you’ll return here to begin your trial.`;
+        message.style.background = '';
+        message.style.borderColor = '';
+        message.style.color = '';
+      }
+      message.classList.add('show');
+      button.disabled = false;
+      button.textContent = 'Send secure sign-in link →';
+    });
+    refreshAccount();
+  </script>
+</body>
+</html>
