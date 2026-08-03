@@ -56,7 +56,12 @@
     input[type="range"] { width:100%; accent-color:var(--pink); }
     .preview-panel { padding:18px; }
     .preview-panel h2 { margin-bottom:2px; }
-    .preview-clip-action { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:14px; }
+    .wave-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+    .zoom-controls, .history-controls { display:flex; gap:8px; align-items:center; }
+    .zoom-controls button, .history-controls button { min-width:36px; padding:8px 10px; border:1px solid #4a3e63; border-radius:10px; color:var(--ink); background:#211932; font-weight:700; }
+    .zoom-controls button:hover, .history-controls button:hover, .secondary:hover, .choose:hover, .preset:hover { transform:translateY(-1px); }
+    .zoom-label { color:var(--muted); font-size:13px; }
+    .preview-clip-action { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
     .preview-clip-action .value { font-size:14px; }
     .wave-wrap { margin-top:14px; padding:18px; border-radius:14px; background:#100d19; border:1px solid #2b223c; }
     canvas { width:100%; height:100px; display:block; cursor:crosshair; }
@@ -64,10 +69,16 @@
     .play { min-width:96px; color:#190f2a; background:var(--green); }
     .secondary { color:var(--ink); background:#302643; border:1px solid #4a3e63; }
     .time { margin-left:auto; color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
+    .export-meta { margin-top:14px; }
+    .export-progress { margin:10px 0 0; }
+    .progress-track { width:100%; height:10px; overflow:hidden; border-radius:999px; background:#1a1327; border:1px solid #4a3e63; }
+    .progress-bar { width:0%; height:100%; background:linear-gradient(90deg,var(--pink),var(--purple)); transition:width .18s ease; }
+    .progress-label { display:block; margin-top:7px; color:var(--muted); font-size:12px; }
     .export { width:100%; margin-top:18px; border:0; border-radius:12px; padding:14px 16px; font-weight:750; color:#1a1028; background:linear-gradient(100deg,var(--pink),#c6a7ff); }
     .export:disabled,.play:disabled { opacity:.5; cursor:not-allowed; }
     .notice { min-height:22px; margin:13px 0 0; text-align:center; color:var(--muted); font-size:13px; }
     .legal { margin:27px auto 0; max-width:700px; color:#998eae; font-size:12px; text-align:center; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--pink); outline-offset:2px; }
     @media (max-width:760px) { .workspace { grid-template-columns:1fr; grid-template-areas:"upload" "preview" "presets" "controls"; } header { margin-bottom:30px; } .panel { padding:19px; } }
   </style>
 </head>
@@ -83,9 +94,20 @@
         <input id="audioFile" type="file" accept="audio/*" hidden>
       </section>
       <section class="panel preview-panel">
-        <h2>3. Preview your clip</h2><p class="muted">Click the waveform to move through the audio.</p>
+        <h2>3. Preview your clip</h2><p class="muted">Click the waveform to move through the audio. Drag the clip start handle to fine-tune the export range.</p>
+        <div class="wave-toolbar">
+          <div class="zoom-controls" aria-label="Waveform zoom controls">
+            <button id="zoomOut" type="button" aria-label="Zoom waveform out">−</button>
+            <span id="zoomLabel" class="zoom-label">100%</span>
+            <button id="zoomIn" type="button" aria-label="Zoom waveform in">+</button>
+          </div>
+          <div class="history-controls" aria-label="Edit history controls">
+            <button id="undoPreset" type="button">Undo</button>
+            <button id="redoPreset" type="button">Redo</button>
+          </div>
+        </div>
         <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><span id="time" class="time">00:00 / 00:00</span></div></div>
-        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button></div>
+        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button></div>
       </section>
       </div>
       <div class="editor-column">
@@ -110,6 +132,10 @@
         <div class="control"><label for="fadeIn">Fade in <span id="fadeInValue" class="value">0.0s</span></label><input id="fadeIn" type="range" min="0" max="5" step="0.1" value="0"></div>
         <div class="control"><label for="fadeOut">Fade out <span id="fadeOutValue" class="value">0.0s</span></label><input id="fadeOut" type="range" min="0" max="5" step="0.1" value="0"></div>
         <div class="control"><label for="loop">Export length <span id="loopValue" class="value">Full audio</span></label><input id="loop" type="range" min="0" max="60" step="15" value="0"></div>
+        <div class="export-meta">
+          <div class="progress-track" aria-hidden="true"><div id="exportProgressBar" class="progress-bar"></div></div>
+          <span id="exportProgressText" class="progress-label">Waiting for file</span>
+        </div>
         <button id="exportButton" class="export" type="button" disabled>Export WAV</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
       </section>
       </div>
@@ -124,16 +150,40 @@
     const speed = document.getElementById('speed'), reverb = document.getElementById('reverb'), fadeIn = document.getElementById('fadeIn'), fadeOut = document.getElementById('fadeOut'), loop = document.getElementById('loop');
     const speedValue = document.getElementById('speedValue'), reverbValue = document.getElementById('reverbValue'), fadeInValue = document.getElementById('fadeInValue'), fadeOutValue = document.getElementById('fadeOutValue'), loopValue = document.getElementById('loopValue');
     const playButton = document.getElementById('playButton'), stopButton = document.getElementById('stopButton'), exportButton = document.getElementById('exportButton');
-    const notice = document.getElementById('notice'), canvas = document.getElementById('waveform'), ctx = canvas.getContext('2d'), time = document.getElementById('time'), seek = document.getElementById('seek'), setClipStart = document.getElementById('setClipStart'), clipStartValue = document.getElementById('clipStartValue'), presetName = document.getElementById('presetName'), savePreset = document.getElementById('savePreset'), savedPresetList = document.getElementById('savedPresetList');
+    const notice = document.getElementById('notice'), canvas = document.getElementById('waveform'), ctx = canvas.getContext('2d'), time = document.getElementById('time'), seek = document.getElementById('seek'), setClipStart = document.getElementById('setClipStart'), clipStartValue = document.getElementById('clipStartValue'), clipEndValue = document.getElementById('clipEndValue'), presetName = document.getElementById('presetName'), savePreset = document.getElementById('savePreset'), savedPresetList = document.getElementById('savedPresetList');
+    const undoPreset = document.getElementById('undoPreset'), redoPreset = document.getElementById('redoPreset'), zoomIn = document.getElementById('zoomIn'), zoomOut = document.getElementById('zoomOut'), zoomLabel = document.getElementById('zoomLabel');
+    const exportProgressBar = document.getElementById('exportProgressBar'), exportProgressText = document.getElementById('exportProgressText');
     const reverblyAuth = window.reverblySupabaseClient;
     let context, audioBuffer, source, startedAt = 0, playOffset = 0, currentOffset = 0, clipStart = 0, dragHandle = null, animation, savedPresets = [], currentPlan = 'free';
+    let zoomLevel = 1, historyStack = [], historyIndex = -1;
     const historySettings = new URLSearchParams(location.search);
     const formatTime = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(Math.floor(seconds % 60)).padStart(2,'0')}`;
-    function updateLabels() { speedValue.textContent = `${Number(speed.value).toFixed(2)}×`; reverbValue.textContent = `${reverb.value}%`; fadeInValue.textContent = `${Number(fadeIn.value).toFixed(1)}s`; fadeOutValue.textContent = `${Number(fadeOut.value).toFixed(1)}s`; loopValue.textContent = loop.value === '0' ? 'Full audio' : `${loop.value} seconds`; drawWave(); }
+    function updateLabels() { speedValue.textContent = `${Number(speed.value).toFixed(2)}×`; reverbValue.textContent = `${reverb.value}%`; fadeInValue.textContent = `${Number(fadeIn.value).toFixed(1)}s`; fadeOutValue.textContent = `${Number(fadeOut.value).toFixed(1)}s`; loopValue.textContent = loop.value === '0' ? 'Full audio' : `${loop.value} seconds`; clipEndValue.textContent = loop.value === '0' ? 'End of file' : formatTime(previewEnd()); drawWave(); }
     const canSavePresets = () => currentPlan === 'pro' || currentPlan === 'trialing';
+    function currentSnapshot() { return { speed:speed.value, reverb:reverb.value, fadeIn:fadeIn.value, fadeOut:fadeOut.value, loop:loop.value, clipStart }; }
+    function pushHistoryState() {
+      const next = currentSnapshot();
+      const previous = historyStack[historyIndex];
+      if (previous && JSON.stringify(previous) === JSON.stringify(next)) return;
+      historyStack.splice(historyIndex + 1);
+      historyStack.push(next);
+      if (historyStack.length > 40) historyStack.shift();
+      historyIndex = historyStack.length - 1;
+    }
+    function applySnapshot(snapshot) {
+      speed.value = snapshot.speed;
+      reverb.value = snapshot.reverb;
+      fadeIn.value = snapshot.fadeIn;
+      fadeOut.value = snapshot.fadeOut;
+      loop.value = snapshot.loop;
+      clipStart = snapshot.clipStart;
+      updateLabels();
+      refreshClipStart();
+      if (audioBuffer) setPosition(clipStart);
+    }
     function applyHistorySettings() { if(!historySettings.has('speed')) return; speed.value=historySettings.get('speed') || speed.value; reverb.value=historySettings.get('reverb') || reverb.value; fadeIn.value=historySettings.get('fadeIn') || fadeIn.value; fadeOut.value=historySettings.get('fadeOut') || fadeOut.value; loop.value=historySettings.get('loop') || loop.value; updateLabels(); }
     async function saveExportHistory(blob, outputName) { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) return; const originalName=fileName.textContent.replace(/^✓\s*/,'') || 'audio'; const activePreset=document.querySelector('.preset.active'); const preset=activePreset ? activePreset.childNodes[0].textContent.trim() : 'Custom'; const path=`${session.user.id}/${crypto.randomUUID()}.wav`; const {error:uploadError}=await reverblyAuth.storage.from('exports').upload(path,blob,{contentType:'audio/wav',upsert:false}); const {error}=await reverblyAuth.from('exports').insert({user_id:session.user.id,original_name:originalName,output_name:outputName,preset,speed:Number(speed.value),reverb:Number(reverb.value),loop_seconds:Number(loop.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),clip_start_seconds:clipStart,storage_path:uploadError ? null : path}); if(error) console.warn('Export history was not saved.',error.message); }
-    function applySavedPreset(preset) { stop(); speed.value=preset.speed; reverb.value=preset.reverb; fadeIn.value=preset.fade_in; fadeOut.value=preset.fade_out; loop.value=preset.loop_seconds; if(audioBuffer) { clipStart=0; refreshClipStart(); setPosition(clipStart); } updateLabels(); notice.textContent=`"${preset.name}" is ready to preview.`; }
+    function applySavedPreset(preset) { stop(); speed.value=preset.speed; reverb.value=preset.reverb; fadeIn.value=preset.fade_in; fadeOut.value=preset.fade_out; loop.value=preset.loop_seconds; if(audioBuffer) { clipStart=0; refreshClipStart(); setPosition(clipStart); } updateLabels(); notice.textContent=`"${preset.name}" is ready to preview.`; pushHistoryState(); }
     function renderSavedPresets(message) { savedPresetList.replaceChildren(); if(message) { const text=document.createElement('small'); text.textContent=message; savedPresetList.append(text); return; } savedPresets.forEach(preset=>{ const row=document.createElement('div'), use=document.createElement('button'), remove=document.createElement('button'); row.className='saved-item'; use.type='button'; use.textContent=preset.name; use.title=`${Number(preset.speed).toFixed(2)}x, ${preset.reverb}% reverb`; use.onclick=()=>applySavedPreset(preset); remove.type='button'; remove.textContent='×'; remove.title=`Delete ${preset.name}`; remove.setAttribute('aria-label',`Delete ${preset.name}`); remove.onclick=()=>deleteSavedPreset(preset.id); row.append(use,remove); savedPresetList.append(row); }); }
     async function loadSavedPresets() { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { currentPlan='free'; renderSavedPresets('Sign in with Pro or Trial to save presets.'); return; } const {data:profile}=await reverblyAuth.from('profiles').select('plan').eq('id',session.user.id).maybeSingle(); currentPlan=profile?.plan || 'free'; if(!canSavePresets()) { renderSavedPresets('Available with Reverbly Pro or Trial.'); return; } const {data,error}=await reverblyAuth.from('saved_presets').select('id,name,speed,reverb,fade_in,fade_out,loop_seconds').order('created_at',{ascending:false}); savedPresets=data || []; renderSavedPresets(error ? 'Could not load presets yet. Run the saved-presets SQL migration.' : savedPresets.length ? '' : 'Save your first custom preset.'); }
     async function saveCurrentPreset() { const name=presetName.value.trim(); if(!name) { notice.textContent='Give your preset a name first.'; presetName.focus(); return; } const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { notice.textContent='Sign in, then start a Trial or Pro plan to save presets.'; return; } if(!canSavePresets()) { notice.textContent='Saved presets are available with Reverbly Pro or Trial.'; return; } savePreset.disabled=true; const {data,error}=await reverblyAuth.from('saved_presets').insert({user_id:session.user.id,name,speed:Number(speed.value),reverb:Number(reverb.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),loop_seconds:Number(loop.value)}).select('id,name,speed,reverb,fade_in,fade_out,loop_seconds').single(); savePreset.disabled=false; if(error) { notice.textContent='Could not save yet. Make sure the saved-presets SQL migration has run.'; return; } savedPresets.unshift(data); presetName.value=''; renderSavedPresets(); notice.textContent=`"${data.name}" was saved to your account.`; }
@@ -145,6 +195,7 @@
       for(let x=0;x<w;x++){ let min=1,max=-1; for(let i=0;i<step;i++){ const v=data[x*step+i]||0; if(v<min)min=v;if(v>max)max=v; } ctx.moveTo(x,(1+min)*amp+h*.08);ctx.lineTo(x,(1+max)*amp+h*.08); } ctx.stroke();
       if(loop.value!=='0'){ const startX=clipStart/audioBuffer.duration*w,endX=previewEnd()/audioBuffer.duration*w; ctx.fillStyle='rgba(8,6,15,.58)';ctx.fillRect(0,0,startX,h);ctx.fillRect(endX,0,w-endX,h);ctx.fillStyle='rgba(159,124,255,.15)';ctx.fillRect(startX,0,endX-startX,h);ctx.strokeStyle='#ff77c8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(startX,0);ctx.lineTo(startX,h);ctx.moveTo(endX,0);ctx.lineTo(endX,h);ctx.stroke();ctx.fillStyle='#ff77c8';ctx.fillRect(startX-5,0,10,8);ctx.fillRect(endX-5,0,10,8); }
       ctx.fillStyle='#ff77c8'; ctx.fillRect(Math.min(w-2,progress*w), 0, 3, h);
+      ctx.fillStyle='rgba(159,124,255,.28)'; ctx.fillRect(0, h-20, w, 20);
     }
     function impulse(ac, amount) { const seconds = .35 + amount/100*3.2, buffer=ac.createBuffer(2, Math.max(1,Math.floor(ac.sampleRate*seconds)),ac.sampleRate); for(let c=0;c<2;c++){const d=buffer.getChannelData(c);for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.8);} return buffer; }
     function graph(ac, destination, startOffset=clipStart) { const src=ac.createBufferSource(); src.buffer=audioBuffer; src.playbackRate.value=Number(speed.value); const dry=ac.createGain(); const wet=ac.createGain(); const master=ac.createGain(); const conv=ac.createConvolver(); const amount=Number(reverb.value), duration=clipLength()/Number(speed.value), elapsed=Math.max(0,(startOffset-clipStart)/Number(speed.value)), remaining=Math.max(0,duration-elapsed), inSeconds=Math.min(Number(fadeIn.value),duration/2), outSeconds=Math.min(Number(fadeOut.value),duration/2), now=ac.currentTime; conv.buffer=impulse(ac,amount); dry.gain.value=1; wet.gain.value=amount/100*.75;
@@ -156,7 +207,7 @@
     function clipLength() { return loop.value==='0' ? audioBuffer.duration : Math.min(Number(loop.value), audioBuffer.duration-clipStart); }
     function previewEnd() { return clipStart+clipLength(); }
     function normalizeClipStart() { if(!audioBuffer || loop.value==='0') { clipStart=0; return; } clipStart=Math.max(0,Math.min(clipStart,audioBuffer.duration-Number(loop.value))); }
-    function refreshClipStart() { normalizeClipStart(); clipStartValue.textContent=loop.value==='0'?'Beginning':formatTime(clipStart); setClipStart.disabled=!audioBuffer||loop.value==='0'; }
+    function refreshClipStart() { normalizeClipStart(); clipStartValue.textContent=loop.value==='0'?'Beginning':formatTime(clipStart); clipEndValue.textContent=loop.value==='0'?'End of file':formatTime(previewEnd()); setClipStart.disabled=!audioBuffer||loop.value==='0'; }
     function setPosition(seconds) { if(!audioBuffer) return; currentOffset=Math.max(clipStart,Math.min(seconds,previewEnd())); seek.value=String(clipLength() ? (currentOffset-clipStart)/clipLength()*100 : 0); time.textContent=`${formatTime(currentOffset)} / ${formatTime(previewEnd())}`; drawWave(currentOffset/audioBuffer.duration); }
     function stop(reset=true) { if(source){ source.onended=null; source.stop(); source.disconnect(); source=null; } cancelAnimationFrame(animation); if(reset) currentOffset=clipStart; playButton.textContent='▶ Play'; setPosition(currentOffset); }
     function tick() { if(!source || !context) return; const elapsed=(context.currentTime-startedAt)*Number(speed.value)+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(tick); }
@@ -189,21 +240,29 @@
       }
       return { allowed: true, message: result.message };
     }
+    function updateProgress(value, label) {
+      exportProgressBar.style.width = `${Math.max(0, Math.min(100, value))}%`;
+      exportProgressText.textContent = label;
+    }
     async function exportWav() {
       if (!audioBuffer) return;
       exportButton.disabled = true;
+      updateProgress(5, 'Checking export quota…');
       const quota = await checkExportAccess();
       if (!quota.allowed) {
         notice.textContent = quota.message;
+        updateProgress(0, 'Quota unavailable');
         exportButton.disabled = false;
         return;
       }
+      updateProgress(20, 'Rendering WAV…');
       notice.textContent = 'Rendering your WAV…';
       const rate = Number(speed.value), length = Math.ceil(clipLength() / rate * audioBuffer.sampleRate);
       const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
       const src = graph(offline, offline.destination);
       src.start(0, clipStart, clipLength());
       const rendered = await offline.startRendering();
+      updateProgress(75, 'Encoding WAV…');
       const bytes = encodeWav(rendered), blob = new Blob([bytes], { type: 'audio/wav' }), link = document.createElement('a');
       const outputName = `reverbly-${fileName.textContent.replace(/^✓\s*/,'').replace(/\.[^.]+$/,'')}.wav`;
       link.href = URL.createObjectURL(blob);
@@ -211,12 +270,43 @@
       link.click();
       URL.revokeObjectURL(link.href);
       notice.textContent = quota.message || 'Your WAV download has started.';
+      updateProgress(100, 'Download ready');
       await saveExportHistory(blob, outputName);
       exportButton.disabled = false;
     }
     function encodeWav(buffer) { const channels=buffer.numberOfChannels, length=buffer.length*channels*2, ab=new ArrayBuffer(44+length), v=new DataView(ab); const put=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}; put(0,'RIFF');v.setUint32(4,36+length,true);put(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*channels*2,true);v.setUint16(32,channels*2,true);v.setUint16(34,16,true);put(36,'data');v.setUint32(40,length,true);let offset=44;for(let i=0;i<buffer.length;i++)for(let c=0;c<channels;c++){const s=Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]));v.setInt16(offset,s<0?s*0x8000:s*0x7fff,true);offset+=2;}return ab; }
+    function adjustZoom(direction) {
+      const delta = direction === 'in' ? 0.2 : -0.2;
+      zoomLevel = Math.min(2, Math.max(0.8, Number((zoomLevel + delta).toFixed(2))));
+      canvas.width = 640 * zoomLevel;
+      zoomLabel.textContent = `${Math.round(zoomLevel * 100)}%`;
+      if (audioBuffer) {
+        drawWave(currentOffset / audioBuffer.duration);
+      } else {
+        drawWave();
+      }
+    }
+    function restoreHistory(direction) {
+      if (!historyStack.length) return;
+      if (direction === 'undo' && historyIndex > 0) historyIndex -= 1;
+      if (direction === 'redo' && historyIndex < historyStack.length - 1) historyIndex += 1;
+      applySnapshot(historyStack[historyIndex]);
+    }
     chooseButton.onclick=()=>audioFile.click(); audioFile.onchange=e=>load(e.target.files[0]); ['dragenter','dragover'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.add('drag')})); ['dragleave','drop'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.remove('drag')})); dropzone.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
-    [speed,reverb,fadeIn,fadeOut,loop].forEach(input=>input.addEventListener('input',()=>{updateLabels();refreshClipStart();if(audioBuffer)setPosition(Math.min(Math.max(currentOffset,clipStart),previewEnd()));})); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;loop.value=btn.dataset.loop;if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event){const rect=canvas.getBoundingClientRect();return Math.max(0,Math.min(audioBuffer.duration,(event.clientX-rect.left)/rect.width*audioBuffer.duration));} canvas.onpointerdown=event=>{if(!audioBuffer)return;const point=pointAt(event);if(loop.value==='0'){setPosition(point);return;}const threshold=audioBuffer.duration*.025;if(Math.abs(point-clipStart)<threshold)dragHandle='start';else if(Math.abs(point-previewEnd())<threshold)dragHandle='end';else{clipStart=Math.min(point,audioBuffer.duration-clipLength());refreshClipStart();setPosition(clipStart);}canvas.setPointerCapture(event.pointerId);}; canvas.onpointermove=event=>{if(!dragHandle||!audioBuffer)return;const point=pointAt(event);if(dragHandle==='start')clipStart=Math.min(point,audioBuffer.duration-clipLength());else clipStart=Math.max(0,Math.min(point-clipLength(),audioBuffer.duration-clipLength()));refreshClipStart();setPosition(clipStart);}; canvas.onpointerup=event=>{if(!audioBuffer)return;dragHandle=null;canvas.releasePointerCapture(event.pointerId);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; setClipStart.onclick=()=>{if(!audioBuffer||loop.value==='0')return;clipStart=currentOffset;refreshClipStart();setPosition(clipStart);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=exportWav; savePreset.onclick=saveCurrentPreset; presetName.onkeydown=event=>{if(event.key==='Enter')saveCurrentPreset();}; applyHistorySettings(); updateLabels(); loadSavedPresets();
+    [speed,reverb,fadeIn,fadeOut,loop].forEach(input=>input.addEventListener('input',()=>{pushHistoryState(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(Math.min(Math.max(currentOffset,clipStart),previewEnd()));})); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;loop.value=btn.dataset.loop;if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));pushHistoryState(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event){const rect=canvas.getBoundingClientRect();return Math.max(0,Math.min(audioBuffer.duration,(event.clientX-rect.left)/rect.width*audioBuffer.duration));} canvas.onpointerdown=event=>{if(!audioBuffer)return;const point=pointAt(event);const threshold=audioBuffer.duration*.025;if(Math.abs(point-clipStart)<threshold)dragHandle='start';else if(Math.abs(point-previewEnd())<threshold)dragHandle='end';else{if(loop.value==='0'){clipStart=Math.min(point,audioBuffer.duration-15);refreshClipStart();setPosition(clipStart);}else{clipStart=Math.min(point,audioBuffer.duration-clipLength());refreshClipStart();setPosition(clipStart);}return;}canvas.setPointerCapture(event.pointerId);}; canvas.onpointermove=event=>{if(!dragHandle||!audioBuffer)return;const point=pointAt(event);if(dragHandle==='start'){clipStart=Math.max(0,Math.min(point,audioBuffer.duration-clipLength()));refreshClipStart();setPosition(clipStart);}else{const nextLength=Math.max(0.25,Math.min(audioBuffer.duration-clipStart,Math.abs(point-clipStart)));const roundedLength=Math.max(15,Math.round(nextLength/15)*15);loop.value=String(Math.min(60,roundedLength));updateLabels();refreshClipStart();setPosition(clipStart);}pushHistoryState();}; canvas.onpointerup=event=>{if(!audioBuffer)return;dragHandle=null;canvas.releasePointerCapture(event.pointerId);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; setClipStart.onclick=()=>{if(!audioBuffer||loop.value==='0')return;clipStart=currentOffset;refreshClipStart();setPosition(clipStart);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; zoomIn.onclick=()=>adjustZoom('in'); zoomOut.onclick=()=>adjustZoom('out'); undoPreset.onclick=()=>restoreHistory('undo'); redoPreset.onclick=()=>restoreHistory('redo'); document.addEventListener('keydown', event => {
+      const isTyping = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+      if ((event.code === 'Space' || event.key === ' ') && !isTyping) {
+        event.preventDefault();
+        if (audioBuffer) { if (source) stop(false); else play(); }
+      }
+      if (event.key === 'ArrowLeft' && !isTyping) { if (audioBuffer) { setPosition(currentOffset - 1); } }
+      if (event.key === 'ArrowRight' && !isTyping) { if (audioBuffer) { setPosition(currentOffset + 1); } }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !isTyping) {
+        event.preventDefault();
+        if (event.shiftKey) restoreHistory('redo'); else restoreHistory('undo');
+      }
+    });
+    playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=exportWav; savePreset.onclick=saveCurrentPreset; presetName.onkeydown=event=>{if(event.key==='Enter')saveCurrentPreset();}; pushHistoryState(); applyHistorySettings(); updateLabels(); loadSavedPresets();
   </script>
 </body>
 </html>
