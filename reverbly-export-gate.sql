@@ -62,6 +62,7 @@ set search_path = public
 as $$
 declare
   usage_row public.anonymous_export_usage%rowtype;
+  inserted_row_count integer := 0;
 begin
   if p_client_id is null or length(trim(p_client_id)) < 1 then
     return query select false, 'free'::text, 'Anonymous export quota could not be validated.';
@@ -77,8 +78,17 @@ begin
     insert into public.anonymous_export_usage (id, export_date, export_count)
     values (p_client_id, current_date, 1)
     on conflict (id) do nothing;
-    return query select true, 'free'::text, 'Your free export is ready.';
-    return;
+
+    get diagnostics inserted_row_count = ROW_COUNT;
+    if inserted_row_count = 1 then
+      return query select true, 'free'::text, 'Your free export is ready.';
+      return;
+    end if;
+
+    select * into usage_row
+    from public.anonymous_export_usage
+    where id = p_client_id
+    for update;
   end if;
 
   if usage_row.export_date is distinct from current_date then

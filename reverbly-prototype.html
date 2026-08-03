@@ -192,18 +192,18 @@
     async function exportWav() {
       if (!audioBuffer) return;
       exportButton.disabled = true;
-      notice.textContent = 'Rendering your WAV…';
-      const rate = Number(speed.value), length = Math.ceil(clipLength() / rate * audioBuffer.sampleRate);
-      const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
-      const src = graph(offline, offline.destination);
-      src.start(0, clipStart, clipLength());
-      const rendered = await offline.startRendering();
       const quota = await checkExportAccess();
       if (!quota.allowed) {
         notice.textContent = quota.message;
         exportButton.disabled = false;
         return;
       }
+      notice.textContent = 'Rendering your WAV…';
+      const rate = Number(speed.value), length = Math.ceil(clipLength() / rate * audioBuffer.sampleRate);
+      const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
+      const src = graph(offline, offline.destination);
+      src.start(0, clipStart, clipLength());
+      const rendered = await offline.startRendering();
       const bytes = encodeWav(rendered), blob = new Blob([bytes], { type: 'audio/wav' }), link = document.createElement('a');
       const outputName = `reverbly-${fileName.textContent.replace(/^✓\s*/,'').replace(/\.[^.]+$/,'')}.wav`;
       link.href = URL.createObjectURL(blob);
