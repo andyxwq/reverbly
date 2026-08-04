@@ -6,8 +6,10 @@
     // Replace the test link with the live Payment Link before production launch.
     stripeTrialLink: 'https://buy.stripe.com/test_eVq5kv34s38O3QneFmd7q00',
     // Optional: Supabase Edge Function that creates a Stripe Customer Portal session.
-    // Deploy reverbly-stripe-portal.ts and set this to the function URL.
-    stripePortalFunctionUrl: ''
+    stripePortalFunctionUrl: '',
+    // Optional analytics endpoint (Plausible custom events, or your own collector).
+    // Example Plausible: leave empty and set window.plausible if using their script.
+    analyticsEndpoint: ''
   };
 
   if (!window.supabase) {
@@ -16,4 +18,20 @@
 
   window.reverblySupabaseConfig = config;
   window.reverblySupabaseClient = window.supabase.createClient(config.url, config.anonKey);
+
+  window.reverblyTrack = function reverblyTrack(eventName, props) {
+    try {
+      if (typeof window.plausible === 'function') {
+        window.plausible(eventName, props ? { props: props } : undefined);
+      }
+      if (config.analyticsEndpoint) {
+        navigator.sendBeacon?.(
+          config.analyticsEndpoint,
+          new Blob([JSON.stringify({ event: eventName, props: props || {}, ts: Date.now() })], { type: 'application/json' })
+        );
+      }
+    } catch (_) {
+      // analytics must never break the product
+    }
+  };
 })();

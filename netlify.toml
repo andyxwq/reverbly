@@ -1,0 +1,38 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Allow Web Audio + Supabase + Stripe + unpkg SDK
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://api.stripe.com https://buy.stripe.com; img-src 'self' data:; media-src 'self' blob: data:; frame-src https://js.stripe.com https://hooks.stripe.com; base-uri 'self'; form-action 'self' https://buy.stripe.com"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/reverbly-supabase-config.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[redirects]]
+  from = "/app"
+  to = "/reverbly-prototype.html"
+  status = 301
+
+[[redirects]]
+  from = "/trial"
+  to = "/reverbly-account.html"
+  status = 301
+
+[[redirects]]
+  from = "/account"
+  to = "/reverbly-dashboard.html"
+  status = 301
+

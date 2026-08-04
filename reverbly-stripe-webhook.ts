@@ -7,7 +7,7 @@ function hex(bytes: ArrayBuffer) {
 }
 
 async function isValidStripeSignature(body: string, signature: string | null, secret: string) {
-  if (!signature) return false
+  if (!signature || !secret) return false
   const values = Object.fromEntries(signature.split(',').map((part) => part.split('=')))
   const timestamp = Number(values.t)
   if (!timestamp || !values.v1 || Math.abs(Date.now() / 1000 - timestamp) > 300) return false
@@ -56,55 +56,67 @@ async function saveSubscription(supabase: ReturnType<typeof createClient>, userI
 }
 
 Deno.serve(async (request) => {
-  if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders })
-
-  const body = await request.text()
-  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
-  if (!(await isValidStripeSignature(body, request.headers.get('stripe-signature'), webhookSecret))) {
-    return new Response(JSON.stringify({ error: 'Invalid Stripe signature' }), { status: 400, headers: corsHeaders })
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: corsHeaders })
   }
 
-  const keys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}')
-  const serviceKey = keys.default ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey!)
-  const event = JSON.parse(body)
-  const object = event.data.object
+  try {
+    const body = await request.text()
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
+    if (!(await isValidStripeSignature(body, request.headers.get('stripe-signature'), webhookSecret))) {
+      return new Response(JSON.stringify({ error: 'Invalid Stripe signature' }), { status: 400, headers: corsHeaders })
+    }
 
-  if (event.type === 'checkout.session.completed') {
-    const directUserId = typeof object.client_reference_id === 'string' ? object.client_reference_id : null
-    const email = object.customer_details?.email ?? object.customer_email
-    if ((directUserId || email) && object.customer && object.subscription) {
-      const profileId = directUserId ?? await profileIdFor(supabase, String(object.customer), email)
-      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
+    const keys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}')
+    const serviceKey = keys.default ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!Deno.env.get('SUPABASE_URL') || !serviceKey) {
+      return new Response(JSON.stringify({ error: 'Supabase is not configured' }), { status: 500, headers: corsHeaders })
+    }
 
-      if (profileId && stripeKey) {
-        const response = await fetch(
-          `https://api.stripe.com/v1/subscriptions/${object.subscription}`,
-          { headers: { Authorization: `Bearer ${stripeKey}` } }
-        )
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey!)
+    const event = JSON.parse(body)
+    const object = event.data.object
 
-        if (!response.ok) {
-          throw new Error('Could not retrieve Stripe subscription')
+    if (event.type === 'checkout.session.completed') {
+      const directUserId = typeof object.client_reference_id === 'string' ? object.client_reference_id : null
+      const email = object.customer_details?.email ?? object.customer_email
+      if ((directUserId || email) && object.customer && object.subscription) {
+        const profileId = directUserId ?? await profileIdFor(supabase, String(object.customer), email)
+        const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
+
+        if (profileId && stripeKey) {
+          const response = await fetch(
+            `https://api.stripe.com/v1/subscriptions/${object.subscription}`,
+            { headers: { Authorization: `Bearer ${stripeKey}` } }
+          )
+
+          if (!response.ok) {
+            throw new Error('Could not retrieve Stripe subscription')
+          }
+
+          await saveSubscription(supabase, profileId, await response.json())
         }
-
-        await saveSubscription(supabase, profileId, await response.json())
       }
     }
-  }
 
-  if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
-    const { data: subscription } = await supabase.from('subscriptions').select('user_id').eq('stripe_customer_id', String(object.customer)).maybeSingle()
-    const userId = subscription?.user_id ?? await profileIdFor(supabase, String(object.customer))
-    if (userId) await saveSubscription(supabase, userId, object)
-  }
-
-  if (event.type === 'customer.subscription.deleted') {
-    const { data: subscription } = await supabase.from('subscriptions').select('user_id').eq('stripe_customer_id', String(object.customer)).maybeSingle()
-    if (subscription) {
-      await supabase.from('subscriptions').update({ status: 'canceled', updated_at: new Date().toISOString() }).eq('user_id', subscription.user_id)
-      await supabase.from('profiles').update({ plan: 'free', updated_at: new Date().toISOString() }).eq('id', subscription.user_id)
+    if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+      const { data: subscription } = await supabase.from('subscriptions').select('user_id').eq('stripe_customer_id', String(object.customer)).maybeSingle()
+      const userId = subscription?.user_id ?? await profileIdFor(supabase, String(object.customer))
+      if (userId) await saveSubscription(supabase, userId, object)
     }
-  }
 
-  return new Response(JSON.stringify({ received: true }), { status: 200, headers: corsHeaders })
+    if (event.type === 'customer.subscription.deleted') {
+      const { data: subscription } = await supabase.from('subscriptions').select('user_id').eq('stripe_customer_id', String(object.customer)).maybeSingle()
+      if (subscription) {
+        await supabase.from('subscriptions').update({ status: 'canceled', updated_at: new Date().toISOString() }).eq('user_id', subscription.user_id)
+        await supabase.from('profiles').update({ plan: 'free', updated_at: new Date().toISOString() }).eq('id', subscription.user_id)
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true, type: event.type }), { status: 200, headers: corsHeaders })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Webhook handler failed'
+    console.error('reverbly-stripe-webhook', message)
+    return new Response(JSON.stringify({ error: message }), { status: 500, headers: corsHeaders })
+  }
 })

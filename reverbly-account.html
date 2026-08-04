@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <title>Start your Reverbly trial</title>
   <style>
     :root { --ink:#f6f3ff; --muted:#b8b1cb; --surface:#181224; --line:#3b2e54; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; }
@@ -79,7 +80,7 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (activeSession?.user?.id) {
-        window.location.assign(checkoutUrl(activeSession.user.id));
+        if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start'); window.location.assign(checkoutUrl(activeSession.user.id));
         return;
       }
       const email = emailInput.value.trim();

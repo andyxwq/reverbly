@@ -4,14 +4,17 @@ Reverbly is a browser-based audio editor for short-form creators. It creates slo
 
 ## Project files
 
-- `index.html` – entry point
+- `index.html` – entry point (redirects to landing)
 - `reverbly-landing.html` – marketing site
 - `reverbly-prototype.html` – audio editor
 - `reverbly-account.html` – passwordless sign-in and trial checkout entry
 - `reverbly-dashboard.html` – plan status, billing portal entry, export history
-- `reverbly-supabase-config.js` – browser config (Supabase publishable key + Stripe Payment Link)
+- `reverbly-privacy.html` / `reverbly-terms.html` – legal pages
+- `reverbly-supabase-config.js` – Supabase + Stripe Payment Link + optional analytics
 - `reverbly-stripe-webhook.ts` – Edge Function for Stripe subscription events
 - `reverbly-stripe-portal.ts` – Edge Function for Stripe Customer Portal sessions
+- `netlify.toml` – security headers and short URL redirects
+- `404.html`, `robots.txt`, `sitemap.xml`, `favicon.svg`
 
 ## Supabase migrations
 
@@ -22,7 +25,7 @@ Run these files in Supabase SQL Editor, in this order:
 3. `reverbly-saved-presets.sql`
 4. `reverbly-export-history.sql`
 
-The last migration creates a private `exports` storage bucket for WAV files saved in export history.
+Optional: `reverbly-storage-retention.sql` (notes only).
 
 ## Auth setup
 
@@ -35,47 +38,45 @@ The last migration creates a private `exports` storage bucket for WAV files save
 
 1. Create a Subscription Payment Link with a **7-day trial** and $7/month price.
 2. Put the Payment Link URL in `reverbly-supabase-config.js` → `stripeTrialLink`.
-   - Keep the `test_…` link for staging; switch to the live link before launch.
 3. Deploy Edge Functions and set secrets:
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY` (and `SUPABASE_ANON_KEY` for the portal function)
-4. Webhook endpoint (`reverbly-stripe-webhook.ts`) events:
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-5. Deploy `reverbly-stripe-portal.ts`, enable Customer Portal in Stripe, then set
-   `stripePortalFunctionUrl` in `reverbly-supabase-config.js` to the function URL.
+4. Webhook events: `checkout.session.completed`, `customer.subscription.created|updated|deleted`
+5. Deploy portal function, enable Customer Portal in Stripe, set `stripePortalFunctionUrl`.
 
-Payment Link must pass `client_reference_id` (the signed-in user id) so the webhook can attach the subscription to the correct profile.
+Payment Link must receive `client_reference_id` (signed-in user id).
 
-## Plan limits (client-enforced)
+## Plan limits
 
 | Plan | Exports | Max file | Max duration |
 |------|---------|----------|--------------|
 | Free | 1 / day | 20 MB | 5 minutes |
 | Trial / Pro | Unlimited | 80 MB | 20 minutes |
 
-Server-side export quota remains in `consume_export` / `consume_export_anonymous`.
+## Analytics (optional)
 
-## Netlify deployment
+`window.reverblyTrack(event, props)` fires when:
 
-1. Connect the GitHub repository.
-2. Publish directory = repository root (no build command).
-3. Mirror the production URL in Supabase Auth redirect settings.
+- Plausible is loaded (`window.plausible`), or
+- `analyticsEndpoint` is set in config (sendBeacon JSON)
 
-## Secrets
+Events: `audio_loaded`, `export_success`, `export_blocked`, `trial_checkout_start`, `billing_portal_open`.
 
-Do not commit `.env` files or Stripe/Supabase service keys. The publishable Supabase key is intentionally public.
+## Netlify
+
+- Publish directory = repository root
+- Short paths: `/app` → editor, `/trial` → account, `/account` → dashboard
+- Security headers + CSP configured in `netlify.toml`
 
 ## Before launch checklist
 
-- [ ] SQL migrations applied on production Supabase
-- [ ] Magic-link sign-in works on the production URL
+- [ ] SQL migrations on production Supabase
+- [ ] Magic-link works on production URL
 - [ ] Live Stripe Payment Link (not `test_`) in config
-- [ ] Webhook deployed and trial → dashboard shows **Trial active**
-- [ ] Customer Portal function deployed; **Manage billing** works
-- [ ] Export while signed in → history Download + Recreate work
-- [ ] Storage retention policy reviewed for `exports` bucket
+- [ ] Webhook deployed; trial → dashboard **Trial active**
+- [ ] Portal function deployed; **Manage billing** works
+- [ ] Export history Download + Recreate
+- [ ] Storage retention reviewed
+- [ ] Domain + sitemap hostnames match production
