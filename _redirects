@@ -1,10 +1,5 @@
-/app                      /reverbly-prototype.html  301
-/trial                    /reverbly-account.html    301
-/account                  /reverbly-dashboard.html  301
-/reverbly-landing         /reverbly-landing.html    200
-/reverbly-prototype       /reverbly-prototype.html  200
-/reverbly-account         /reverbly-account.html    200
-/reverbly-dashboard       /reverbly-dashboard.html  200
-/reverbly-privacy         /reverbly-privacy.html    200
-/reverbly-terms           /reverbly-terms.html      200
-/reverbly-examples       /reverbly-examples.html  200
+# Short aliases only. Do NOT rewrite /page ↔ /page.html — Cloudflare Worker
+# already normalizes .html and that conflict caused infinite 307 redirects.
+/app      /reverbly-prototype.html  302
+/trial    /reverbly-account.html    302
+/account  /reverbly-dashboard.html  302
