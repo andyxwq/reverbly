@@ -1,0 +1,10 @@
+# Cloudflare Workers static assets — prevents .html ↔ extensionless redirect loops
+name = "reverbly"
+compatibility_date = "2025-08-01"
+workers_dev = true
+
+[assets]
+directory = "."
+# Serve exact paths only. Do not auto-redirect between /page and /page.html
+html_handling = "none"
+not_found_handling = "404-page"
