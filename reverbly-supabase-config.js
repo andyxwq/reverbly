@@ -8,7 +8,6 @@
     // Optional: Supabase Edge Function that creates a Stripe Customer Portal session.
     stripePortalFunctionUrl: '',
     // Optional analytics endpoint (Plausible custom events, or your own collector).
-    // Example Plausible: leave empty and set window.plausible if using their script.
     analyticsEndpoint: ''
   };
 
@@ -17,7 +16,14 @@
   }
 
   window.reverblySupabaseConfig = config;
-  window.reverblySupabaseClient = window.supabase.createClient(config.url, config.anonKey);
+  window.reverblySupabaseClient = window.supabase.createClient(config.url, config.anonKey, {
+    auth: {
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+      flowType: 'pkce'
+    }
+  });
 
   window.reverblyTrack = function reverblyTrack(eventName, props) {
     try {
