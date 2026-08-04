@@ -75,17 +75,19 @@ Deno.serve(async (request) => {
     const email = object.customer_details?.email ?? object.customer_email
     if ((directUserId || email) && object.customer && object.subscription) {
       const profileId = directUserId ?? await profileIdFor(supabase, String(object.customer), email)
-      if (profileId) {
-        const { error } = await supabase.from('subscriptions').upsert({
-          user_id: profileId,
-          stripe_customer_id: String(object.customer),
-          stripe_subscription_id: String(object.subscription),
-          status: 'trialing',
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' })
-        if (error) throw error
-        const result = await supabase.from('profiles').update({ plan: 'trialing', updated_at: new Date().toISOString() }).eq('id', profileId)
-        if (result.error) throw result.error
+      const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
+
+      if (profileId && stripeKey) {
+        const response = await fetch(
+          `https://api.stripe.com/v1/subscriptions/${object.subscription}`,
+          { headers: { Authorization: `Bearer ${stripeKey}` } }
+        )
+
+        if (!response.ok) {
+          throw new Error('Could not retrieve Stripe subscription')
+        }
+
+        await saveSubscription(supabase, profileId, await response.json())
       }
     }
   }
