@@ -71,9 +71,10 @@ Deno.serve(async (request) => {
   const object = event.data.object
 
   if (event.type === 'checkout.session.completed') {
+    const directUserId = typeof object.client_reference_id === 'string' ? object.client_reference_id : null
     const email = object.customer_details?.email ?? object.customer_email
-    if (email && object.customer && object.subscription) {
-      const profileId = await profileIdFor(supabase, String(object.customer), email)
+    if ((directUserId || email) && object.customer && object.subscription) {
+      const profileId = directUserId ?? await profileIdFor(supabase, String(object.customer), email)
       if (profileId) {
         const { error } = await supabase.from('subscriptions').upsert({
           user_id: profileId,
