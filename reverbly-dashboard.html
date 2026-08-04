@@ -28,7 +28,7 @@
           <div class="detail"><div class="label">Current plan</div><div id="plan" class="value"><span class="badge">Loading…</span></div></div>
           <div class="detail"><div class="label">Exports today</div><div id="exports" class="value">—</div></div>
         </div>
-        <div id="subscriptionNote" class="notice">Checking your subscription…</div>
+        <div id="subscriptionNote" class="notice">Checking your subscription…</div><div id="planCompare" class="notice hidden" style="margin-top:12px"></div>
         <div class="actions">
           <a class="button" href="reverbly-prototype.html">Open editor</a>
           <a class="button secondary hidden" id="startTrial" href="reverbly-account.html">Start 7-day trial</a>
@@ -156,6 +156,7 @@
       const isPaid = plan === 'trialing' || plan === 'pro' ||
         subscription?.status === 'trialing' || subscription?.status === 'active';
       startTrial.classList.toggle('hidden', isPaid);
+      const compareEl=document.getElementById('planCompare'); if(compareEl){ if(isPaid) compareEl.classList.add('hidden'); }
       manageBilling.classList.toggle('hidden', !subscription?.stripe_customer_id);
 
       subscriptionNote.classList.remove('err');
@@ -171,6 +172,11 @@
         subscriptionNote.textContent = 'Subscription status: ' + subscription.status + '. You can start a new trial when ready.';
       } else {
         subscriptionNote.textContent = 'You are on the Free plan (1 export per day). Start a 7-day trial for unlimited exports.';
+        const compare = document.getElementById('planCompare');
+        if (compare) {
+          compare.classList.remove('hidden');
+          compare.innerHTML = '<strong>Free vs Pro</strong><br>Free: 1 export/day, 20&nbsp;MB, 5&nbsp;min · Pro/Trial: unlimited exports, 80&nbsp;MB, 20&nbsp;min, saved presets, history, batch export.';
+        }
       }
       loadHistory();
     }

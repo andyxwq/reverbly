@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <title>Examples — Reverbly</title>
+  <style>
+    :root{--ink:#f6f3ff;--muted:#b8b1cb;--line:#3a2e52;--pink:#ff77c8;--purple:#9f7cff;--green:#84e8c1}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(circle at 15% 10%,#392567 0,transparent 29rem),#0e0b17;font:16px/1.45 Inter,system-ui,sans-serif}
+    .wrap{width:min(900px,calc(100% - 32px));margin:auto;padding:28px 0 60px}
+    a{color:#cdbbff;text-decoration:none}
+    .brand{display:inline-flex;gap:10px;align-items:center;color:var(--ink);font-weight:760;font-size:22px;margin-bottom:36px}
+    .mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:#160d26;background:linear-gradient(135deg,var(--pink),var(--purple))}
+    h1{margin:0 0 10px;font-size:clamp(28px,5vw,40px);letter-spacing:-1.4px}
+    .lead{color:var(--muted);margin:0 0 28px}
+    .grid{display:grid;gap:14px}
+    .card{padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#1d1630,#130f20)}
+    .card h2{margin:0 0 6px;font-size:18px}
+    .card p{margin:0 0 12px;color:var(--muted);font-size:14px}
+    .meta{font-size:12px;color:#9c92b4;margin-bottom:12px}
+    .btn{display:inline-flex;padding:10px 14px;border-radius:10px;background:linear-gradient(105deg,var(--pink),#bea3ff);color:#1b102a;font-weight:750;font-size:14px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="brand" href="reverbly-landing.html"><span class="mark">R</span>Reverbly</a>
+    <h1>Example settings</h1>
+    <p class="lead">Open any example in the editor. Upload your own audio — the controls load automatically.</p>
+    <div class="grid">
+      <article class="card">
+        <h2>Slowed + reverb</h2>
+        <p>Classic atmospheric version for late-night posts.</p>
+        <div class="meta">0.82× · 58% reverb · full length</div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.82&reverb=58&fadeIn=0.2&fadeOut=0.4&loop=0">Open in editor</a>
+      </article>
+      <article class="card">
+        <h2>Nightcore energy</h2>
+        <p>Pushed tempo for short, punchy clips.</p>
+        <div class="meta">1.18× · 0% reverb · full length</div>
+        <a class="btn" href="reverbly-prototype.html?speed=1.18&reverb=0&loop=0">Open in editor</a>
+      </article>
+      <article class="card">
+        <h2>Lo-fi night</h2>
+        <p>Slower, wetter, soft edges.</p>
+        <div class="meta">0.75× · 72% reverb · fades</div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.75&reverb=72&fadeIn=0.4&fadeOut=0.8&loop=0">Open in editor</a>
+      </article>
+      <article class="card">
+        <h2>Reel hook 8s</h2>
+        <p>Tight opening for vertical video.</p>
+        <div class="meta">1.05× · 28% reverb · 8s</div>
+        <a class="btn" href="reverbly-prototype.html?speed=1.05&reverb=28&loop=8">Open in editor</a>
+      </article>
+      <article class="card">
+        <h2>Vibe room</h2>
+        <p>Warm low-pass + reverb for background mood.</p>
+        <div class="meta">0.9× · 45% reverb · vibe mode</div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.9&reverb=45&loop=0&mode=vibe">Open in editor</a>
+      </article>
+      <article class="card">
+        <h2>Vocal forward</h2>
+        <p>Clearer presence for speech-heavy clips.</p>
+        <div class="meta">1.0× · 12% reverb · vocal mode</div>
+        <a class="btn" href="reverbly-prototype.html?speed=1&reverb=12&loop=0&mode=vocal">Open in editor</a>
+      </article>
+    </div>
+  </main>
+</body>
+</html>
