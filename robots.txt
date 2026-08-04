@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://getreverbly.com/sitemap.xml
+Sitemap: https://reverbly.andi-brumx.workers.dev/sitemap.xml

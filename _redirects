@@ -1,3 +1,9 @@
-/app      /reverbly-prototype.html  301
-/trial    /reverbly-account.html    301
-/account  /reverbly-dashboard.html  301
+/app                      /reverbly-prototype.html  301
+/trial                    /reverbly-account.html    301
+/account                  /reverbly-dashboard.html  301
+/reverbly-landing         /reverbly-landing.html    200
+/reverbly-prototype       /reverbly-prototype.html  200
+/reverbly-account         /reverbly-account.html    200
+/reverbly-dashboard       /reverbly-dashboard.html  200
+/reverbly-privacy         /reverbly-privacy.html    200
+/reverbly-terms           /reverbly-terms.html      200

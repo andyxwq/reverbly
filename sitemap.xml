@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://getreverbly.com/</loc></url>
-  <url><loc>https://getreverbly.com/reverbly-landing.html</loc></url>
-  <url><loc>https://getreverbly.com/reverbly-prototype.html</loc></url>
-  <url><loc>https://getreverbly.com/reverbly-account.html</loc></url>
-  <url><loc>https://getreverbly.com/reverbly-dashboard.html</loc></url>
-  <url><loc>https://getreverbly.com/reverbly-privacy.html</loc></url>
-  <url><loc>https://getreverbly.com/reverbly-terms.html</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-landing</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-prototype</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-account</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-dashboard</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-privacy</loc></url>
+  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-terms</loc></url>
 </urlset>

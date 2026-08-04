@@ -61,6 +61,10 @@ Payment Link must receive `client_reference_id` (signed-in user id).
 
 Events: `audio_loaded`, `export_success`, `export_blocked`, `trial_checkout_start`, `billing_portal_open`.
 
+## Production URL
+
+Current deploy: `https://reverbly.andi-brumx.workers.dev`
+
 ## Cloudflare Pages deployment
 
 This is a **static** site — no build step and **no paid plan required** for normal deploys.

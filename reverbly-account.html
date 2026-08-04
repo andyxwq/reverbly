@@ -48,7 +48,14 @@
     const message = document.getElementById('success');
     const submitBtn = document.getElementById('submitBtn');
     const emailInput = document.getElementById('email');
-    const returnTo = new URL('reverbly-account.html', window.location.href).toString();
+    const returnTo = (function () {
+      const u = new URL(window.location.href);
+      u.hash = '';
+      u.search = '';
+      // Prefer current path so magic-link returns to the same host/path style (Workers may omit .html)
+      if (!/reverbly-account/i.test(u.pathname)) u.pathname = '/reverbly-account';
+      return u.toString();
+    })();
     let activeSession = null;
 
     function showMessage(text, isError) {
