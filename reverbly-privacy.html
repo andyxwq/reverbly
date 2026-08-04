@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy — Reverbly</title>
+  <style>
+    :root{--ink:#f6f3ff;--muted:#b8b1cb;--line:#3b2e54;--pink:#ff77c8;--purple:#9f7cff}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:#0e0b17;font:16px/1.55 Inter,ui-sans-serif,system-ui,sans-serif}
+    .wrap{width:min(720px,calc(100% - 36px));margin:auto;padding:28px 0 64px}
+    a{color:#cdbbff}h1{font-size:34px;letter-spacing:-1px}h2{margin-top:28px;font-size:18px}
+    p,li{color:var(--muted)}.brand{display:inline-flex;gap:10px;align-items:center;color:var(--ink);font-weight:760;text-decoration:none;margin-bottom:36px}
+    .mark{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;color:#190f2a;background:linear-gradient(135deg,var(--pink),var(--purple))}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <a class="brand" href="reverbly-landing.html"><span class="mark">R</span>Reverbly</a>
+    <h1>Privacy Policy</h1>
+    <p>Last updated: August 4, 2026</p>
+    <p>Reverbly (“we”) provides a browser-based audio tool. This policy explains what we collect and why.</p>
+    <h2>What we process</h2>
+    <ul>
+      <li><strong>Account email</strong> — for passwordless sign-in and subscription notices.</li>
+      <li><strong>Plan and export metadata</strong> — preset settings, timestamps, and quota counters so free limits and Pro features work.</li>
+      <li><strong>Optional export files</strong> — WAV files you choose to keep in export history are stored in a private bucket tied to your account.</li>
+      <li><strong>Payment data</strong> — handled by Stripe. We do not store full card numbers.</li>
+      <li><strong>Anonymous export id</strong> — a random id in your browser local storage to enforce the free daily export without an account.</li>
+    </ul>
+    <h2>Audio in the browser</h2>
+    <p>Editing runs locally in your browser with the Web Audio API. We do not upload your original audio unless you export while signed in and storage succeeds for history.</p>
+    <h2>Processors</h2>
+    <p>We use Supabase (auth, database, storage) and Stripe (billing). Their privacy terms apply to data they process on our behalf.</p>
+    <h2>Retention</h2>
+    <p>Account data stays while your account exists. Export history files may be removed after a retention period or when you delete your account. Contact us to request deletion.</p>
+    <h2>Contact</h2>
+    <p>Questions: <a href="mailto:hello@getreverbly.com">hello@getreverbly.com</a></p>
+    <p><a href="reverbly-landing.html">← Back</a> · <a href="reverbly-terms.html">Terms</a></p>
+  </main>
+</body>
+</html>

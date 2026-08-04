@@ -1,0 +1,14 @@
+-- Optional: review storage retention for export WAV files.
+-- Supabase does not auto-delete objects; run a scheduled cleanup or
+-- configure lifecycle rules in your storage provider if available.
+--
+-- Example: list objects older than 90 days (inspect only — adjust before delete):
+-- select name, created_at
+-- from storage.objects
+-- where bucket_id = 'exports'
+--   and created_at < now() - interval '90 days'
+-- order by created_at
+-- limit 100;
+--
+-- Prefer deleting via a trusted backend job with the service role key,
+-- and remove matching rows from public.exports when storage_path is cleared.
