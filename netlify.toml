@@ -1,3 +1,6 @@
+# Optional / legacy. Prefer Cloudflare Pages (_headers + _redirects).
+# Safe to ignore if the site is deployed on Cloudflare.
+
 [build]
   publish = "."
 
@@ -8,7 +11,6 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    # Allow Web Audio + Supabase + Stripe + unpkg SDK
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://api.stripe.com https://buy.stripe.com; img-src 'self' data:; media-src 'self' blob: data:; frame-src https://js.stripe.com https://hooks.stripe.com; base-uri 'self'; form-action 'self' https://buy.stripe.com"
 
 [[headers]]
@@ -35,4 +37,3 @@
   from = "/account"
   to = "/reverbly-dashboard.html"
   status = 301
-

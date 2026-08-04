@@ -13,7 +13,7 @@ Reverbly is a browser-based audio editor for short-form creators. It creates slo
 - `reverbly-supabase-config.js` – Supabase + Stripe Payment Link + optional analytics
 - `reverbly-stripe-webhook.ts` – Edge Function for Stripe subscription events
 - `reverbly-stripe-portal.ts` – Edge Function for Stripe Customer Portal sessions
-- `netlify.toml` – security headers and short URL redirects
+- `_headers` / `_redirects` – Cloudflare Pages security headers and short URLs
 - `404.html`, `robots.txt`, `sitemap.xml`, `favicon.svg`
 
 ## Supabase migrations
@@ -57,26 +57,44 @@ Payment Link must receive `client_reference_id` (signed-in user id).
 
 ## Analytics (optional)
 
-`window.reverblyTrack(event, props)` fires when:
-
-- Plausible is loaded (`window.plausible`), or
-- `analyticsEndpoint` is set in config (sendBeacon JSON)
+`window.reverblyTrack(event, props)` fires when Plausible is loaded or `analyticsEndpoint` is set.
 
 Events: `audio_loaded`, `export_success`, `export_blocked`, `trial_checkout_start`, `billing_portal_open`.
 
-## Netlify
+## Cloudflare Pages deployment
 
-- Publish directory = repository root
-- Short paths: `/app` → editor, `/trial` → account, `/account` → dashboard
-- Security headers + CSP configured in `netlify.toml`
+This is a **static** site — no build step and **no paid plan required** for normal deploys.
+
+1. Cloudflare Dashboard → **Workers & Pages** → create a Pages project from the GitHub repo `andyxwq/reverbly`.
+2. Build settings:
+   - **Framework preset:** None
+   - **Build command:** leave empty
+   - **Build output directory:** `/` (or `.`)
+3. Every push to `main` can auto-deploy (free tier is enough).
+4. Add your custom domain in Cloudflare Pages → Custom domains.
+5. Mirror the production URL in Supabase Auth redirect settings.
+
+Short paths (from `_redirects`):
+
+- `/app` → editor
+- `/trial` → trial / sign-in
+- `/account` → dashboard
+
+Security headers live in `_headers` (Cloudflare Pages format).
+
+> `netlify.toml` is leftover compatibility only. You do **not** need Netlify if you deploy on Cloudflare.
+
+## Secrets
+
+Do not commit `.env` files or Stripe/Supabase service keys. See `.env.example` for Edge Function secret names.
 
 ## Before launch checklist
 
 - [ ] SQL migrations on production Supabase
-- [ ] Magic-link works on production URL
+- [ ] Magic-link works on the Cloudflare production URL
 - [ ] Live Stripe Payment Link (not `test_`) in config
 - [ ] Webhook deployed; trial → dashboard **Trial active**
 - [ ] Portal function deployed; **Manage billing** works
 - [ ] Export history Download + Recreate
 - [ ] Storage retention reviewed
-- [ ] Domain + sitemap hostnames match production
+- [ ] `sitemap.xml` / `robots.txt` hostnames match your real domain
