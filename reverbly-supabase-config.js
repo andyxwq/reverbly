@@ -6,7 +6,7 @@
     // Replace the test link with the live Payment Link before production launch.
     stripeTrialLink: 'https://buy.stripe.com/test_eVq5kv34s38O3QneFmd7q00',
     // Optional: Supabase Edge Function that creates a Stripe Customer Portal session.
-    stripePortalFunctionUrl: '',
+    stripePortalFunctionUrl: 'https://vnqzknyxxdxtjlfzyqfh.supabase.co/functions/v1/reverbly-stripe-portal',
     // Optional analytics endpoint (Plausible custom events, or your own collector).
     analyticsEndpoint: ''
   };

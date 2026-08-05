@@ -46,7 +46,7 @@ Deno.serve(async (request) => {
     return new Response(JSON.stringify({ error: 'No Stripe customer on file' }), { status: 400, headers: corsHeaders })
   }
 
-  let returnUrl = 'https://getreverbly.com/reverbly-dashboard.html'
+  let returnUrl = 'https://reverbly.andi-brumx.workers.dev/reverbly-dashboard.html'
   try {
     const body = await request.json()
     if (typeof body?.return_url === 'string' && body.return_url.startsWith('http')) {
