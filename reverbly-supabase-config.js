@@ -4,7 +4,7 @@
     anonKey: 'sb_publishable_mKbX82lncbniQINpMLRrHQ_lZ7AJnCU',
     // Stripe Payment Link for the 7-day trial → Pro plan.
     // Replace the test link with the live Payment Link before production launch.
-    stripeTrialLink: 'https://buy.stripe.com/test_eVq5kv34s38O3QneFmd7q00',
+    stripeTrialLink: 'https://buy.stripe.com/28EbIT48L0SP8nV4TL7EQ00',
     // Optional: Supabase Edge Function that creates a Stripe Customer Portal session.
     stripePortalFunctionUrl: 'https://vnqzknyxxdxtjlfzyqfh.supabase.co/functions/v1/reverbly-stripe-portal',
     // Optional analytics endpoint (Plausible custom events, or your own collector).
