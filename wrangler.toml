@@ -1,10 +1,10 @@
-# Cloudflare Workers static assets
 name = "reverbly"
+main = "src/worker.js"
 compatibility_date = "2025-08-01"
 workers_dev = true
 
 [assets]
 directory = "."
-# Serve / as index.html; avoid .html strip loops that caused 307 redirect cycles
-html_handling = "auto-trailing-slash"
-not_found_handling = "404-page"
+binding = "ASSETS"
+html_handling = "none"
+not_found_handling = "none"
