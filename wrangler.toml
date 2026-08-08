@@ -1,10 +1,10 @@
-# Cloudflare Workers static assets — prevents .html ↔ extensionless redirect loops
+# Cloudflare Workers static assets
 name = "reverbly"
 compatibility_date = "2025-08-01"
 workers_dev = true
 
 [assets]
 directory = "."
-# Serve exact paths only. Do not auto-redirect between /page and /page.html
-html_handling = "none"
+# Serve / as index.html; avoid .html strip loops that caused 307 redirect cycles
+html_handling = "auto-trailing-slash"
 not_found_handling = "404-page"
