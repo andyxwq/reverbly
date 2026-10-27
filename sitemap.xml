@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://reverbly.andi-brumx.workers.dev/</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-landing.html</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-prototype.html</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-account.html</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-dashboard.html</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-privacy.html</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-terms.html</loc></url>
-  <url><loc>https://reverbly.andi-brumx.workers.dev/reverbly-support.html</loc></url>
+  <url><loc>https://reverbly.app/</loc></url>
+  <url><loc>https://reverbly.app/reverbly-landing.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-prototype.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-account.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-dashboard.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-examples.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-privacy.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-terms.html</loc></url>
+  <url><loc>https://reverbly.app/reverbly-support.html</loc></url>
 </urlset>
