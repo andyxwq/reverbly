@@ -69,15 +69,23 @@
     .socials a:hover { color:#f6f3ff; background:#2a2040; border-color:#4a3a68; }
 
     
-    .demo { max-width:720px; margin:48px auto 0; padding:22px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(145deg,#1e1730,#171122); text-align:left; }
-    .demo h3 { margin:0 0 6px; font-size:18px; }
-    .demo p { margin:0 0 16px; color:var(--muted); font-size:14px; }
-    .demo-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .demo-card { padding:14px; border:1px solid #423559; border-radius:12px; background:#14101e; }
-    .demo-card strong { display:block; margin-bottom:10px; font-size:14px; }
-    .demo-card button { width:100%; border:0; border-radius:10px; padding:11px; font-weight:700; color:#1b102a; background:linear-gradient(105deg,var(--pink),#bea3ff); }
+    .demo { max-width:760px; margin:56px auto 0; padding:26px; border:1px solid var(--line); border-radius:20px; background:linear-gradient(145deg,#221a35,#14101f); text-align:left; box-shadow:0 24px 60px #00000040; }
+    .demo-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+    .demo h3 { margin:0; font-size:20px; letter-spacing:-.3px; }
+    .demo-badge { color:var(--green); border:1px solid #3e695c; background:#122b27; border-radius:999px; padding:5px 10px; font-size:12px; font-weight:700; }
+    .demo p { margin:0 0 18px; color:var(--muted); font-size:14px; }
+    .demo-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .demo-card { position:relative; padding:16px; border:1px solid #423559; border-radius:14px; background:#14101e; transition:.2s; }
+    .demo-card.active { border-color:var(--purple); box-shadow:0 0 0 1px #9f7cff55; }
+    .demo-card strong { display:block; margin-bottom:4px; font-size:14px; }
+    .demo-card .tag { display:block; margin-bottom:12px; color:var(--muted); font-size:12px; }
+    .demo-wave { display:flex; align-items:flex-end; gap:3px; height:36px; margin-bottom:14px; }
+    .demo-wave i { flex:1; border-radius:2px; background:linear-gradient(180deg,#ff77c8aa,#9f7cff88); min-height:8px; }
+    .demo-card.original .demo-wave i { background:linear-gradient(180deg,#7d7399,#4a4263); }
+    .demo-card button { width:100%; border:0; border-radius:10px; padding:12px; font-weight:700; color:#1b102a; background:linear-gradient(105deg,var(--pink),#bea3ff); cursor:pointer; }
     .demo-card button.playing { background:#302643; color:var(--ink); border:1px solid #554569; }
-    .demo-note { margin-top:12px; color:#958aa9; font-size:12px; }
+    .demo-note { margin-top:14px; color:#958aa9; font-size:12px; }
+    .demo-note a { color:#cdbbff; }
     @media (max-width:720px) { .demo-row { grid-template-columns:1fr; } }
     @media (max-width:720px) { .navlinks a:not(.small-btn) { display:none; }.hero { padding:65px 0 75px; }h1{letter-spacing:-2.8px}.editor-body,.features,.pricing { grid-template-columns:1fr; }.section{padding:78px 0}.feature{min-height:auto}.editor-shot{padding:8px}.hero-actions{flex-direction:column;align-items:center}.primary,.outline{width:min(100%,280px)}footer{gap:12px;flex-direction:column} }
   </style>
@@ -89,14 +97,24 @@
   <main id="top">
     <section class="hero wrap"><span class="eyebrow">Audio tools for short-form creators</span><h1>Make your audio<br><span class="gradient">ready to post.</span></h1><p class="lead">Turn original audio into slowed, sped up, and perfectly looped versions — made for the moments people replay.</p><div class="hero-actions"><a class="primary" href="reverbly-prototype.html">Create your first version <span>→</span></a><a class="outline" href="#extension">Get the extension</a></div><p class="cred">No account needed for your first export · Also on Chrome &amp; Edge</p></section>
     <section class="editor-shot wrap" aria-label="Preview of the Reverbly editor"><div class="editor-top"><span>✦ Reverbly editor</span><span>Export WAV</span></div><div class="editor-body"><div class="fake-panel"><strong>midnight-demo.mp3</strong><small>2:46 · Original audio</small><div class="wave" aria-hidden="true"><i style="height:24%"></i><i style="height:56%"></i><i style="height:80%"></i><i style="height:37%"></i><i style="height:65%"></i><i style="height:90%"></i><i style="height:41%"></i><i style="height:70%"></i><i style="height:29%"></i><i style="height:92%"></i><i style="height:52%"></i><i style="height:73%"></i><i style="height:31%"></i><i style="height:61%"></i><i style="height:88%"></i><i style="height:43%"></i><i style="height:74%"></i><i style="height:36%"></i><i style="height:84%"></i><i style="height:56%"></i><i style="height:93%"></i><i style="height:48%"></i><i style="height:69%"></i><i style="height:35%"></i><i style="height:77%"></i><i style="height:52%"></i><i style="height:88%"></i><i style="height:39%"></i></div><div class="playline"></div></div><div class="fake-panel"><strong>Choose a version</strong><div class="pills"><div class="pill on">Slowed + reverb<br><small>0.82× · atmospheric</small></div><div class="pill">Sped up<br><small>1.18× · energetic</small></div><div class="pill">15 sec hook</div><div class="pill">30 sec clip</div></div></div></div></section>
-    <section class="demo wrap" aria-label="Audio demo">
-      <h3>Hear the difference</h3>
-      <p>Same short motif — original vs slowed + reverb. No upload required.</p>
+    <section class="demo wrap" aria-label="Audio demo" id="demo">
+      <div class="demo-head"><h3>Hear the difference</h3><span class="demo-badge">No upload needed</span></div>
+      <p>Same short motif — original vs slowed + reverb. Tap play and compare.</p>
       <div class="demo-row">
-        <div class="demo-card"><strong>Original</strong><button type="button" id="playOriginal" data-src="assets/demo-original.mp3">▶ Play original</button></div>
-        <div class="demo-card"><strong>Reverbly version</strong><button type="button" id="playReverbly" data-src="assets/demo-reverbly.mp3">▶ Play slowed + reverb</button></div>
+        <div class="demo-card original" data-card="original">
+          <strong>Original</strong>
+          <span class="tag">Clean · unprocessed</span>
+          <div class="demo-wave" aria-hidden="true"><i style="height:56%"></i><i style="height:33%"></i><i style="height:38%"></i><i style="height:71%"></i><i style="height:20%"></i><i style="height:61%"></i><i style="height:82%"></i><i style="height:67%"></i><i style="height:96%"></i><i style="height:57%"></i><i style="height:30%"></i><i style="height:47%"></i><i style="height:60%"></i><i style="height:85%"></i><i style="height:26%"></i><i style="height:27%"></i><i style="height:40%"></i><i style="height:65%"></i></div>
+          <button type="button" id="playOriginal" data-src="assets/demo-original.mp3">▶ Play original</button>
+        </div>
+        <div class="demo-card" data-card="reverbly">
+          <strong>Reverbly version</strong>
+          <span class="tag">0.82× · atmospheric reverb</span>
+          <div class="demo-wave" aria-hidden="true"><i style="height:68%"></i><i style="height:29%"></i><i style="height:66%"></i><i style="height:83%"></i><i style="height:64%"></i><i style="height:73%"></i><i style="height:94%"></i><i style="height:95%"></i><i style="height:44%"></i><i style="height:37%"></i><i style="height:74%"></i><i style="height:91%"></i><i style="height:72%"></i><i style="height:65%"></i><i style="height:38%"></i><i style="height:55%"></i><i style="height:36%"></i><i style="height:77%"></i></div>
+          <button type="button" id="playReverbly" data-src="assets/demo-reverbly.mp3">▶ Play slowed + reverb</button>
+        </div>
       </div>
-      <p class="demo-note">Then open the editor with your own audio — or browse <a href="reverbly-examples.html" style="color:#cdbbff">ready-made examples</a>.</p>
+      <p class="demo-note">Then open the editor with your own audio — or browse <a href="reverbly-examples.html">ready-made examples</a>.</p>
     </section>
     <section id="features" class="section wrap"><div class="section-heading"><h2>Built for the version your audience wants.</h2><p>Skip complex audio software. Reverbly makes a few excellent transformations simple, quick and shareable.</p></div><div class="features"><article class="feature"><div class="icon">✦</div><h3>Presets that feel right</h3><p>Slowed + reverb, sped up, and short-form cuts tuned for fast creation.</p></article><article class="feature"><div class="icon">◒</div><h3>Hear it before export</h3><p>Fine-tune speed, reverb and clip length, then preview the exact result.</p></article><article class="feature"><div class="icon">↥</div><h3>Export in a click</h3><p>Download a clean WAV version, ready to pair with your next post.</p></article></div></section>
     <section id="pricing" class="section wrap"><div class="section-heading"><h2>Keep creating, your way.</h2><p>Start with one free export, or go Pro when Reverbly becomes part of your workflow.</p></div><div class="pricing"><article class="plan"><div class="plan-label">Free</div><h3>One version at a time</h3><p class="price">$0 <small>forever</small></p><ul><li>One export every day</li><li>No account needed for the first export</li><li>Slowed, sped up and loop presets</li><li>WAV export</li></ul><a class="outline" href="reverbly-prototype.html">Create for free</a><p class="fine">Sign in later to keep export history.</p></article><article class="plan pro"><div class="plan-label">Reverbly Pro</div><h3>Create without limits</h3><p class="price">$7 <small>/ month</small></p><ul><li>Unlimited exports</li><li>7-day free trial</li><li>Saved presets and export history</li><li>Re-download WAVs from your account</li></ul><a class="primary" href="reverbly-account.html">Start 7-day trial <span>→</span></a><p class="fine">Cancel anytime before the trial ends.</p></article></div></section>
@@ -139,34 +157,37 @@
   <script>
     (function () {
       let current = null;
+      function resetButtons() {
+        document.querySelectorAll('.demo-card button').forEach(b => {
+          b.classList.remove('playing');
+          b.textContent = b.dataset.idle;
+        });
+        document.querySelectorAll('.demo-card').forEach(c => c.classList.remove('active'));
+      }
       function setup(btn) {
         const idle = btn.dataset.idle;
         btn.addEventListener('click', async () => {
           if (current && !current.paused) {
             current.pause();
             current = null;
-            document.querySelectorAll('.demo-card button').forEach(b => {
-              b.classList.remove('playing');
-              b.textContent = b.dataset.idle;
-            });
-            if (btn.classList.contains('playing')) return;
+            const wasThis = btn.classList.contains('playing');
+            resetButtons();
+            if (wasThis) return;
           }
-          document.querySelectorAll('.demo-card button').forEach(b => {
-            b.classList.remove('playing');
-            b.textContent = b.dataset.idle;
-          });
+          resetButtons();
           const audio = new Audio(btn.dataset.src);
           current = audio;
           btn.classList.add('playing');
           btn.textContent = '■ Stop';
+          const card = btn.closest('.demo-card');
+          if (card) card.classList.add('active');
           audio.onended = () => {
-            btn.classList.remove('playing');
-            btn.textContent = idle;
+            resetButtons();
             current = null;
           };
           try { await audio.play(); } catch (e) {
-            btn.classList.remove('playing');
-            btn.textContent = idle;
+            resetButtons();
+            current = null;
           }
         });
       }
