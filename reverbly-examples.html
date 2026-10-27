@@ -3,68 +3,137 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <title>Examples — Reverbly</title>
+  <meta name="description" content="Ready-made slowed, nightcore, lo-fi and hook presets. Open any example in the Reverbly editor.">
+  <meta name="theme-color" content="#0e0b17">
+  <meta property="og:title" content="Examples — Reverbly">
+  <meta property="og:description" content="Ready-made presets for short-form audio. Open in the editor with one click.">
+  <meta property="og:url" content="https://reverbly.app/reverbly-examples.html">
+  <meta property="og:image" content="https://reverbly.app/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://reverbly.app/og.png">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
-    :root{--ink:#f6f3ff;--muted:#b8b1cb;--line:#3a2e52;--pink:#ff77c8;--purple:#9f7cff;--green:#84e8c1}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(circle at 15% 10%,#392567 0,transparent 29rem),#0e0b17;font:16px/1.45 Inter,system-ui,sans-serif}
-    .wrap{width:min(900px,calc(100% - 32px));margin:auto;padding:28px 0 60px}
-    a{color:#cdbbff;text-decoration:none}
-    .brand{display:inline-flex;gap:10px;align-items:center;color:var(--ink);font-weight:760;font-size:22px;margin-bottom:36px}
-    .mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:#160d26;background:linear-gradient(135deg,var(--pink),var(--purple))}
-    h1{margin:0 0 10px;font-size:clamp(28px,5vw,40px);letter-spacing:-1.4px}
-    .lead{color:var(--muted);margin:0 0 28px}
-    .grid{display:grid;gap:14px}
-    .card{padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#1d1630,#130f20)}
-    .card h2{margin:0 0 6px;font-size:18px}
-    .card p{margin:0 0 12px;color:var(--muted);font-size:14px}
-    .meta{font-size:12px;color:#9c92b4;margin-bottom:12px}
-    .btn{display:inline-flex;padding:10px 14px;border-radius:10px;background:linear-gradient(105deg,var(--pink),#bea3ff);color:#1b102a;font-weight:750;font-size:14px}
+    :root { --ink:#f6f3ff; --muted:#b8b1cb; --line:#3a2e52; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; --bg:#0e0b17; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 12% 0%, #392567 0, transparent 28rem), radial-gradient(circle at 90% 80%, #4c1d52 0, transparent 28rem), var(--bg); font:16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color:inherit; }
+    .wrap { width:min(980px, calc(100% - 32px)); margin:auto; padding:28px 0 64px; }
+    .brand { display:inline-flex; gap:10px; align-items:center; font-size:20px; font-weight:750; letter-spacing:-.5px; text-decoration:none; margin-bottom:28px; }
+    .mark { display:grid; place-items:center; width:32px; height:32px; border-radius:9px; color:#160d26; background:linear-gradient(135deg,var(--pink),var(--purple)); box-shadow:0 0 28px #ad78ff70; }
+    h1 { margin:0 0 8px; font-size:clamp(28px,5vw,40px); letter-spacing:-1.4px; line-height:1.1; }
+    .lead { margin:0 0 28px; color:var(--muted); max-width:540px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+    .card { padding:18px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(150deg,#1d1630e8,#130f20e8); box-shadow:0 14px 36px #00000022; display:flex; flex-direction:column; gap:8px; transition:.18s; }
+    .card:hover { border-color:#6a5a8a; transform:translateY(-2px); }
+    .card h2 { margin:0; font-size:17px; letter-spacing:-.2px; }
+    .card p { margin:0; color:var(--muted); font-size:13.5px; flex:1; }
+    .meta { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 6px; }
+    .chip { border:1px solid #4a3e63; background:#211932; border-radius:999px; padding:4px 9px; font-size:11.5px; color:#d8ceef; font-weight:600; }
+    .chip.accent { border-color:#6a5490; color:#e8dcff; background:#2a2040; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; margin-top:6px; border:0; border-radius:10px; padding:11px 14px; font-weight:700; font-size:13.5px; text-decoration:none; color:#1b102a; background:linear-gradient(105deg,var(--pink),#bea3ff); }
+    .btn:hover { filter:brightness(1.05); }
+    .footer { margin-top:40px; color:#998eae; font-size:12px; }
+    .footer a { color:#cdbbff; }
+    @media (max-width:560px) { .wrap { padding-top:20px; } }
   </style>
 </head>
 <body>
   <main class="wrap">
     <a class="brand" href="/"><span class="mark">R</span>Reverbly</a>
     <h1>Example settings</h1>
-    <p class="lead">Open any example in the editor. Upload your own audio — the controls load automatically.</p>
+    <p class="lead">Open any example in the editor. Upload your own audio — the controls load automatically, including bass and keep-pitch when set.</p>
     <div class="grid">
       <article class="card">
         <h2>Slowed + reverb</h2>
         <p>Classic atmospheric version for late-night posts.</p>
-        <div class="meta">0.82× · 58% reverb · full length</div>
-        <a class="btn" href="reverbly-prototype.html?speed=0.82&reverb=58&fadeIn=0.2&fadeOut=0.4&loop=0">Open in editor</a>
+        <div class="meta">
+          <span class="chip accent">0.82×</span>
+          <span class="chip">58% reverb</span>
+          <span class="chip">+6 dB bass</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.82&reverb=58&bass=6&fadeIn=0.25&fadeOut=0.55&loop=0">Open in editor →</a>
       </article>
       <article class="card">
         <h2>Nightcore energy</h2>
         <p>Pushed tempo for short, punchy clips.</p>
-        <div class="meta">1.18× · 0% reverb · full length</div>
-        <a class="btn" href="reverbly-prototype.html?speed=1.18&reverb=0&loop=0">Open in editor</a>
+        <div class="meta">
+          <span class="chip accent">1.18×</span>
+          <span class="chip">light reverb</span>
+          <span class="chip">+2 dB bass</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=1.18&reverb=8&bass=2&loop=0">Open in editor →</a>
       </article>
       <article class="card">
-        <h2>Lo-fi night</h2>
-        <p>Slower, wetter, soft edges.</p>
-        <div class="meta">0.75× · 72% reverb · fades</div>
-        <a class="btn" href="reverbly-prototype.html?speed=0.75&reverb=72&fadeIn=0.4&fadeOut=0.8&loop=0">Open in editor</a>
+        <h2>Daycore / lo-fi</h2>
+        <p>Slower, wetter, soft edges and warm low end.</p>
+        <div class="meta">
+          <span class="chip accent">0.75×</span>
+          <span class="chip">72% reverb</span>
+          <span class="chip">+8 dB bass</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.75&reverb=72&bass=8&fadeIn=0.4&fadeOut=0.8&loop=0">Open in editor →</a>
       </article>
       <article class="card">
         <h2>Reel hook 8s</h2>
         <p>Tight opening for vertical video.</p>
-        <div class="meta">1.05× · 28% reverb · 8s</div>
-        <a class="btn" href="reverbly-prototype.html?speed=1.05&reverb=28&loop=8">Open in editor</a>
+        <div class="meta">
+          <span class="chip accent">1.05×</span>
+          <span class="chip">28% reverb</span>
+          <span class="chip">8s export</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=1.05&reverb=28&bass=3&loop=8">Open in editor →</a>
+      </article>
+      <article class="card">
+        <h2>15 sec hook</h2>
+        <p>Your strongest opening, ready for Shorts &amp; Reels.</p>
+        <div class="meta">
+          <span class="chip accent">1.0×</span>
+          <span class="chip">15s export</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=1&reverb=0&bass=0&loop=15">Open in editor →</a>
+      </article>
+      <article class="card">
+        <h2>30 sec clip</h2>
+        <p>Longer cut for storytelling posts.</p>
+        <div class="meta">
+          <span class="chip accent">1.0×</span>
+          <span class="chip">30s export</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=1&reverb=0&bass=0&loop=30">Open in editor →</a>
       </article>
       <article class="card">
         <h2>Vibe room</h2>
-        <p>Warm low-pass + reverb for background mood.</p>
-        <div class="meta">0.9× · 45% reverb · vibe mode</div>
-        <a class="btn" href="reverbly-prototype.html?speed=0.9&reverb=45&loop=0&mode=vibe">Open in editor</a>
+        <p>Warm low-pass feel + reverb for background mood.</p>
+        <div class="meta">
+          <span class="chip accent">0.9×</span>
+          <span class="chip">45% reverb</span>
+          <span class="chip">vibe mode</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.9&reverb=45&bass=4&loop=0&mode=vibe">Open in editor →</a>
       </article>
       <article class="card">
         <h2>Vocal forward</h2>
         <p>Clearer presence for speech-heavy clips.</p>
-        <div class="meta">1.0× · 12% reverb · vocal mode</div>
-        <a class="btn" href="reverbly-prototype.html?speed=1&reverb=12&loop=0&mode=vocal">Open in editor</a>
+        <div class="meta">
+          <span class="chip accent">1.0×</span>
+          <span class="chip">12% reverb</span>
+          <span class="chip">vocal mode</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=1&reverb=12&bass=0&loop=0&mode=vocal">Open in editor →</a>
+      </article>
+      <article class="card">
+        <h2>Keep pitch slow</h2>
+        <p>Slowed without chipmunk/deep pitch shift — great for vocals.</p>
+        <div class="meta">
+          <span class="chip accent">0.85×</span>
+          <span class="chip">40% reverb</span>
+          <span class="chip">keep pitch</span>
+        </div>
+        <a class="btn" href="reverbly-prototype.html?speed=0.85&reverb=40&bass=3&keepPitch=1&fadeIn=0.2&fadeOut=0.4&loop=0">Open in editor →</a>
       </article>
     </div>
+    <p class="footer"><a href="reverbly-prototype.html">Open empty editor</a> · <a href="/">Home</a> · <a href="reverbly-support.html">Support</a></p>
   </main>
 </body>
 </html>
