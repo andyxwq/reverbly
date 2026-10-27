@@ -10,7 +10,7 @@
   <meta property="og:title" content="Reverbly — Audio creator kit">
   <meta property="og:description" content="Create slowed + reverb, sped-up, and loop-ready WAV clips in your browser.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://reverbly.app/reverbly-prototype.html">
+  <meta property="og:url" content="https://reverbly.app/reverbly-prototype">
   <meta property="og:image" content="https://reverbly.app/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -126,7 +126,7 @@
 </head>
 <body>
   <main class="app">
-    <header><a class="brand" href="/" style="text-decoration:none;color:inherit"><span class="mark">R</span> Reverbly <span id="planPill" class="plan-pill" hidden>Free</span></a><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="header-link" href="reverbly-account.html">Trial</a><a class="header-link" href="reverbly-dashboard.html">Account</a></div></header>
+    <header><a class="brand" href="/" style="text-decoration:none;color:inherit"><span class="mark">R</span> Reverbly <span id="planPill" class="plan-pill" hidden>Free</span></a><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="header-link" href="/reverbly-account">Trial</a><a class="header-link" href="/reverbly-dashboard">Account</a></div></header>
     <div id="trialBanner" class="trial-banner" role="status"></div>
     <section class="hero"><h1>Make your audio<br>ready to post.</h1><p>Turn your original audio into slowed, sped up and looped versions for your next short-form video.</p></section>
     <section class="workspace" aria-label="Audio editor">
@@ -198,7 +198,7 @@
       </section>
       </div>
     </section>
-    <p class="legal">Only upload audio you own or are licensed to use. Reverbly does not grant rights to copyrighted recordings. <a href="reverbly-privacy.html" style="color:inherit">Privacy</a> · <a href="reverbly-terms.html" style="color:inherit">Terms</a></p>
+    <p class="legal">Only upload audio you own or are licensed to use. Reverbly does not grant rights to copyrighted recordings. <a href="/reverbly-privacy" style="color:inherit">Privacy</a> · <a href="/reverbly-terms" style="color:inherit">Terms</a></p>
   </main>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="reverbly-supabase-config.js"></script>
@@ -372,12 +372,12 @@
       if (days > 2) { trialBanner.classList.remove('show'); return; }
       trialBanner.classList.add('show');
       trialBanner.innerHTML = days <= 0
-        ? 'Your trial ends today. <a href="reverbly-dashboard.html">Manage billing</a> to keep Pro.'
-        : `Trial ends in ${days} day${days===1?'':'s'}. <a href="reverbly-dashboard.html">Manage billing</a> · <a href="reverbly-account.html">Stay on Pro</a>`;
+        ? 'Your trial ends today. <a href="/reverbly-dashboard">Manage billing</a> to keep Pro.'
+        : `Trial ends in ${days} day${days===1?'':'s'}. <a href="/reverbly-dashboard">Manage billing</a> · <a href="/reverbly-account">Stay on Pro</a>`;
     }
     function showUpsell(message) {
       if (!upsellBox) return;
-      upsellBox.innerHTML = `${message}<div style="margin-top:10px"><a href="reverbly-account.html">Start 7-day trial →</a></div>`;
+      upsellBox.innerHTML = `${message}<div style="margin-top:10px"><a href="/reverbly-account">Start 7-day trial →</a></div>`;
       upsellBox.classList.add('show');
     }
     function hideUpsell() { if (upsellBox) upsellBox.classList.remove('show'); }
@@ -481,7 +481,7 @@
       const quota = await checkExportAccess();
       if (!quota.allowed) {
         const upsell = (currentPlan === 'free')
-          ? ' <span class="quota-upsell"><a href="reverbly-account.html">Start a 7-day trial</a> for unlimited exports.</span>'
+          ? ' <span class="quota-upsell"><a href="/reverbly-account">Start a 7-day trial</a> for unlimited exports.</span>'
           : '';
         notice.innerHTML = (quota.message || 'Export unavailable.') + upsell;
         showUpsell(quota.message || 'Daily free export used.');
