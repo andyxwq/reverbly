@@ -63,7 +63,7 @@ Events: `audio_loaded`, `export_success`, `export_blocked`, `trial_checkout_star
 
 ## Production URL
 
-Current deploy: `https://reverbly.andi-brumx.workers.dev`
+Current deploy: `https://reverbly.app`
 
 ## Cloudflare Pages deployment
 
