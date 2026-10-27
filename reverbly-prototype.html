@@ -244,7 +244,18 @@
       refreshClipStart();
       if (audioBuffer) setPosition(clipStart);
     }
-    function applyHistorySettings() { if(!historySettings.has('speed')) return; speed.value=historySettings.get('speed') || speed.value; reverb.value=historySettings.get('reverb') || reverb.value; if(historySettings.has('bass')) bass.value=historySettings.get('bass'); if(historySettings.has('keepPitch')) keepPitch.checked=historySettings.get('keepPitch')==='1'; fadeIn.value=historySettings.get('fadeIn') || fadeIn.value; fadeOut.value=historySettings.get('fadeOut') || fadeOut.value; loop.value=historySettings.get('loop') || loop.value; updateLabels(); }
+    function applyHistorySettings() {
+      if (!historySettings.has('speed') && !historySettings.has('reverb') && !historySettings.has('bass')) return;
+      if (historySettings.has('speed')) speed.value = historySettings.get('speed') || speed.value;
+      if (historySettings.has('reverb')) reverb.value = historySettings.get('reverb') || reverb.value;
+      if (historySettings.has('bass')) bass.value = historySettings.get('bass');
+      if (historySettings.has('keepPitch')) keepPitch.checked = historySettings.get('keepPitch') === '1';
+      if (historySettings.has('fadeIn')) fadeIn.value = historySettings.get('fadeIn') || fadeIn.value;
+      if (historySettings.has('fadeOut')) fadeOut.value = historySettings.get('fadeOut') || fadeOut.value;
+      if (historySettings.has('loop')) loop.value = historySettings.get('loop') || loop.value;
+      updateLabels();
+      if (notice) notice.textContent = 'Example settings loaded — upload audio to preview.';
+    }
     const LAST_SETTINGS_KEY = 'reverbly-last-settings';
     function saveLastSettings() {
       try {
