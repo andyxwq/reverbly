@@ -22,7 +22,16 @@
   <style>
     :root { --ink:#f6f3ff; --muted:#b8b1cb; --surface:#181224; --line:#3b2e54; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; }
     *{box-sizing:border-box} body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(circle at 15% 5%,#3c2868 0,transparent 29rem),radial-gradient(circle at 90% 95%,#4f1e51 0,transparent 32rem),#0e0b17;font:16px/1.46 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.page{width:min(1050px,calc(100% - 36px));margin:auto;padding:25px 0 60px}.brand{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:22px;font-weight:760;letter-spacing:-.6px;text-decoration:none}.mark{display:grid;place-items:center;width:34px;height:34px;color:#190f2a;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--purple));box-shadow:0 0 36px #ad78ff85}.shell{display:grid;grid-template-columns:1fr .82fr;gap:18px;align-items:start;max-width:900px;margin:68px auto 0}.panel{padding:32px;border:1px solid var(--line);border-radius:21px;background:linear-gradient(145deg,#211936,#15101f);box-shadow:0 24px 55px #00000036}h1{margin:0 0 11px;font-size:42px;line-height:1.03;letter-spacing:-1.7px}h2{margin:0;font-size:20px}.muted{color:var(--muted)}.form{margin-top:30px}.label{display:block;margin:20px 0 8px;font-size:14px;font-weight:650}.input{width:100%;padding:13px 14px;border:1px solid #514167;border-radius:11px;outline:0;color:var(--ink);background:#100d19;font:inherit}.input:focus{border-color:var(--purple);box-shadow:0 0 0 3px #9f7cff28}.check{display:flex;gap:10px;align-items:flex-start;margin:18px 0;color:#c6bed3;font-size:13px}.check input{margin-top:3px;accent-color:var(--pink)}.start{width:100%;border:0;border-radius:12px;padding:15px;color:#1b102a;background:linear-gradient(105deg,var(--pink),#bfa4ff);font:700 16px inherit;cursor:pointer}.start:disabled{opacity:.55;cursor:not-allowed}.safe{margin:15px 0 0;text-align:center;color:#9b90ae;font-size:12px}.safe span{color:var(--green)}.plan{position:relative;overflow:hidden}.plan:before{content:'';position:absolute;inset:-100px -80px auto auto;width:200px;height:200px;border-radius:50%;background:#a57aff30;filter:blur(4px)}.topline{position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.tag{padding:6px 10px;color:#cdb9ff;border:1px solid #6a5490;border-radius:999px;background:#2a2040;font-size:12px;font-weight:700}.price{margin:22px 0 6px;font-size:35px;font-weight:750;letter-spacing:-1.5px}.price small{font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0}.timeline{margin:28px 0;padding:0;list-style:none}.timeline li{position:relative;padding:0 0 22px 28px;color:#d8d1e4;font-size:14px}.timeline li:before{content:'';position:absolute;left:0;top:4px;width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px #84e8c11b}.timeline li:not(:last-child):after{content:'';position:absolute;left:5px;top:18px;width:2px;height:21px;background:#4a3d60}.timeline b{display:block;margin-bottom:2px;color:#fff}.note{padding:14px;border:1px solid #4a3c60;border-radius:12px;background:#151020;color:#bdb2cc;font-size:13px}.note strong{color:#f6f3ff}.links{display:flex;gap:14px;margin-top:19px;color:#cdbbff;font-size:13px}.links a{color:inherit;text-decoration:none}.success{display:none;margin-top:18px;padding:13px;border-radius:11px;color:#bcf8dd;background:#15352c;border:1px solid #38725f;font-size:14px}.success.show{display:block}.success.err{color:#ffd4e8;background:#401b2d;border-color:#8b3b66}@media(max-width:720px){.shell{grid-template-columns:1fr;margin-top:42px}.panel{padding:24px}h1{font-size:36px}}
-  </style>
+  
+    .mode-tabs { display:flex; gap:8px; margin:0 0 18px; }
+    .mode-tab { flex:1; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:#1a1429; color:var(--muted); font-weight:700; font-size:13px; cursor:pointer; }
+    .mode-tab.active { color:var(--ink); border-color:#6a5a8a; background:#2a2140; box-shadow:0 0 0 1px #9f7cff44; }
+    .hint { margin:6px 0 0; color:var(--muted); font-size:12px; }
+    .secondary-btn { width:100%; margin-top:10px; border:1px solid #4a3e63; border-radius:12px; padding:12px 14px; font-weight:700; color:var(--ink); background:#241c36; cursor:pointer; }
+    .secondary-btn:hover { border-color:#6a5a8a; }
+    .secondary-btn:disabled { opacity:.55; cursor:not-allowed; }
+    #passwordFields { margin-top:4px; }
+</style>
 </head>
 <body>
   <main class="page">
@@ -32,10 +41,20 @@
         <h1>Try Pro for 7 days.</h1>
         <p class="muted">Create without limits. Stripe shows the charge date before you confirm.</p>
         <form id="trialForm" class="form">
+          <div class="mode-tabs" role="tablist" aria-label="Account mode">
+            <button type="button" class="mode-tab active" data-mode="signin" id="tabSignIn">Sign in</button>
+            <button type="button" class="mode-tab" data-mode="signup" id="tabSignUp">Create account</button>
+          </div>
           <label class="label" for="email">Email address</label>
           <input class="input" id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-          <label class="check"><input id="terms" type="checkbox" required><span>I understand my trial becomes <strong>Reverbly Pro at $7/month</strong> after 7 days unless I cancel before then.</span></label>
-          <button class="start" id="submitBtn" type="submit">Send secure sign-in link →</button>
+          <div id="passwordFields">
+            <label class="label" for="password">Password</label>
+            <input class="input" id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" minlength="6">
+            <p class="hint" id="passwordHint">Use your password to sign in. You can also use a magic link below.</p>
+          </div>
+          <label class="check" id="termsWrap"><input id="terms" type="checkbox"><span>I understand my trial becomes <strong>Reverbly Pro at $7/month</strong> after 7 days unless I cancel before then.</span></label>
+          <button class="start" id="submitBtn" type="submit">Sign in →</button>
+          <button class="secondary-btn" id="magicBtn" type="button">Email me a magic link instead</button>
           <p class="safe"><span>●</span> Card details are handled securely by Stripe. Cancel anytime from your account.</p>
           <p id="success" class="success" aria-live="polite"></p>
         </form>
@@ -61,21 +80,44 @@
     const form = document.getElementById('trialForm');
     const message = document.getElementById('success');
     const submitBtn = document.getElementById('submitBtn');
+    const magicBtn = document.getElementById('magicBtn');
     const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const termsInput = document.getElementById('terms');
+    const termsWrap = document.getElementById('termsWrap');
+    const passwordHint = document.getElementById('passwordHint');
+    const tabSignIn = document.getElementById('tabSignIn');
+    const tabSignUp = document.getElementById('tabSignUp');
     const returnTo = (function () {
       const u = new URL(window.location.href);
       u.hash = '';
       u.search = '';
-      // Prefer current path so magic-link returns to the same host/path style (Workers may omit .html)
       if (!/reverbly-account/i.test(u.pathname)) u.pathname = '/reverbly-account';
       return u.toString();
     })();
     let activeSession = null;
+    let mode = 'signin'; // signin | signup
 
     function showMessage(text, isError) {
       message.textContent = text;
       message.classList.add('show');
       message.classList.toggle('err', !!isError);
+    }
+
+    function setMode(next) {
+      mode = next;
+      tabSignIn.classList.toggle('active', mode === 'signin');
+      tabSignUp.classList.toggle('active', mode === 'signup');
+      passwordInput.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+      passwordInput.placeholder = mode === 'signup' ? 'Create a password (min 6 chars)' : 'Your password';
+      passwordHint.textContent = mode === 'signup'
+        ? 'Create a password so you can sign in anytime. We can also email a magic link.'
+        : 'Use your password to sign in. You can also use a magic link below.';
+      termsWrap.style.display = mode === 'signup' ? '' : 'none';
+      termsInput.required = mode === 'signup';
+      if (!activeSession) {
+        submitBtn.textContent = mode === 'signup' ? 'Create account →' : 'Sign in →';
+      }
     }
 
     function checkoutUrl(userId) {
@@ -94,31 +136,98 @@
       activeSession = session;
       emailInput.value = session.user.email || '';
       emailInput.disabled = true;
+      passwordInput.disabled = true;
+      magicBtn.style.display = 'none';
+      tabSignIn.style.display = 'none';
+      tabSignUp.style.display = 'none';
+      termsWrap.style.display = 'none';
       submitBtn.textContent = 'Start 7-day trial →';
       showMessage('Signed in as ' + session.user.email + '. Continue to Stripe to confirm your trial.', false);
     }
 
+    tabSignIn.addEventListener('click', () => setMode('signin'));
+    tabSignUp.addEventListener('click', () => setMode('signup'));
+    setMode('signin');
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (activeSession?.user?.id) {
-        if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start'); window.location.assign(checkoutUrl(activeSession.user.id));
+        if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start');
+        window.location.assign(checkoutUrl(activeSession.user.id));
         return;
       }
       const email = emailInput.value.trim();
+      const password = passwordInput.value;
       if (!email) return;
+      if (!password || password.length < 6) {
+        showMessage('Enter a password with at least 6 characters.', true);
+        passwordInput.focus();
+        return;
+      }
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending sign-in link…';
+      magicBtn.disabled = true;
+      if (mode === 'signup') {
+        if (!termsInput.checked) {
+          showMessage('Please accept the trial terms to create an account.', true);
+          submitBtn.disabled = false;
+          magicBtn.disabled = false;
+          return;
+        }
+        submitBtn.textContent = 'Creating account…';
+        const { data, error } = await supabaseClient.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: returnTo }
+        });
+        if (error) {
+          showMessage(error.message || 'Could not create the account.', true);
+          submitBtn.textContent = 'Create account →';
+        } else if (data.session) {
+          activeSession = data.session;
+          showMessage('Account created. You are signed in as ' + email + '.', false);
+          await refreshAccount();
+        } else {
+          showMessage('Account created. Check ' + email + ' to confirm your email, then sign in.', false);
+          submitBtn.textContent = 'Create account →';
+          setMode('signin');
+        }
+      } else {
+        submitBtn.textContent = 'Signing in…';
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          showMessage(error.message || 'Could not sign in. Check email and password.', true);
+          submitBtn.textContent = 'Sign in →';
+        } else {
+          showMessage('Signed in. Loading your account…', false);
+          await refreshAccount();
+        }
+      }
+      submitBtn.disabled = false;
+      magicBtn.disabled = false;
+    });
+
+    magicBtn.addEventListener('click', async () => {
+      if (activeSession?.user?.id) return;
+      const email = emailInput.value.trim();
+      if (!email) {
+        showMessage('Enter your email first.', true);
+        emailInput.focus();
+        return;
+      }
+      magicBtn.disabled = true;
+      submitBtn.disabled = true;
+      magicBtn.textContent = 'Sending magic link…';
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: returnTo }
       });
       if (error) {
-        showMessage(error.message || 'Could not send the sign-in link.', true);
-        submitBtn.textContent = 'Send secure sign-in link →';
+        showMessage(error.message || 'Could not send the magic link.', true);
       } else {
-        showMessage('Check ' + email + ' for your secure sign-in link. After signing in you will return here to start the trial.', false);
-        submitBtn.textContent = 'Send secure sign-in link →';
+        showMessage('Check ' + email + ' for your Reverbly sign-in link. After signing in you will return here.', false);
       }
+      magicBtn.textContent = 'Email me a magic link instead';
+      magicBtn.disabled = false;
       submitBtn.disabled = false;
     });
 
@@ -126,6 +235,6 @@
       if (session) refreshAccount();
     });
     refreshAccount();
-  </script>
+  </script>  </script>
 </body>
 </html>
