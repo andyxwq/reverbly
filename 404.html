@@ -10,7 +10,7 @@
     (function () {
       var path = location.pathname || '/';
       if (path === '/' || path === '') {
-        location.replace('/index.html');
+        location.replace('/');
         return;
       }
     })();
@@ -27,9 +27,9 @@
     <h1>404</h1>
     <p>This page is not part of Reverbly.</p>
     <div class="links">
-      <a class="btn" href="index.html">Home</a>
-      <a href="reverbly-prototype.html">Editor</a>
-      <a href="reverbly-dashboard.html">Account</a>
+      <a class="btn" href="/">Home</a>
+      <a href="/reverbly-prototype">Editor</a>
+      <a href="/reverbly-dashboard">Account</a>
     </div>
   </div>
 </body>
