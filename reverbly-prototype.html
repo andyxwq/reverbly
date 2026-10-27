@@ -19,8 +19,190 @@
   <meta name="twitter:description" content="Create slowed + reverb, sped-up, and loop-ready WAV clips in your browser.">
   <meta name="twitter:image" content="https://reverbly.app/og.png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --ink:#f6f3ff; --muted:#b8b1cb; --surface:#171226; --surface-2:#221a35; --line:#3a2e52; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 15% 10%, #392567 0, transparent 29rem), radial-gradient(circle at 90% 80%, #4c1d52 0, transparent 31rem), #0e0b17; font:16px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font:inherit; }
+    button { cursor:pointer; }
+    .app { width:min(1120px, calc(100% - 32px)); margin:auto; padding:24px 0 54px; }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:44px; }
+    .brand { display:flex; gap:10px; align-items:center; font-size:22px; font-weight:750; letter-spacing:-.6px; }
+    .mark { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; color:#160d26; background:linear-gradient(135deg,var(--pink),var(--purple)); box-shadow:0 0 36px #ad78ff85; }
+    .badge { color:var(--green); border:1px solid #3e695c; background:#122b27; border-radius:999px; padding:6px 11px; font-size:13px; }
+    .header-link { color:var(--ink); border:1px solid #514167; border-radius:999px; padding:7px 12px; background:#1c152b; font-size:13px; font-weight:700; text-decoration:none; }
+    .hero { max-width:680px; margin:0 auto 34px; text-align:center; }
+    .hero h1 { margin:0 0 12px; font-size:clamp(34px, 6vw, 60px); line-height:1.03; letter-spacing:-2.5px; }
+    .hero p { margin:0; color:var(--muted); font-size:18px; }
+    .workspace { display:grid; grid-template-columns:.82fr 1.18fr; grid-template-areas:"upload preview" "presets controls"; gap:18px; align-items:start; }
+    .editor-column { display:contents; }
+    .upload-panel { grid-area:upload; }
+    .presets-panel { grid-area:presets; }
+    .preview-panel { grid-area:preview; }
+    .controls-panel { grid-area:controls; }
+    .panel { background:linear-gradient(145deg,#1d1630e8,#130f20e8); border:1px solid var(--line); border-radius:20px; padding:24px; box-shadow:0 18px 45px #0000002b; }
+    .panel h2 { margin:0 0 6px; font-size:18px; letter-spacing:-.3px; }
+    .muted { color:var(--muted); font-size:14px; }
+    .dropzone { display:grid; place-items:center; min-height:168px; margin-top:18px; border:1.5px dashed #7860a5; border-radius:15px; padding:18px; text-align:center; background:linear-gradient(145deg,#251c3a,#171224); transition:.2s; }
+    .dropzone.drag { border-color:var(--pink); background:#32203e; transform:translateY(-2px); }
+    .dropzone strong { display:block; margin:12px 0 5px; font-size:17px; }
+    .upload-icon { font-size:34px; color:var(--pink); }
+    .choose, .secondary, .play { border:0; border-radius:10px; padding:10px 14px; font-weight:650; }
+    .choose { margin-top:16px; color:#1b102a; background:linear-gradient(110deg,var(--pink),#bc9dff); }
+    .file-name { margin-top:17px; color:var(--green); font-size:14px; word-break:break-word; }
+    .presets { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0 23px; }
+    .preset { padding:13px; text-align:left; color:var(--ink); border:1px solid var(--line); border-radius:12px; background:var(--surface-2); }
+    .preset.active { outline:2px solid var(--purple); border-color:transparent; background:#2c2146; }
+    .preset span { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+    .saved-presets { margin:0 0 23px; padding:15px; border:1px solid var(--line); border-radius:14px; background:#120e20; }
+    .saved-presets-head { display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:10px; }
+    .saved-presets h3 { margin:0; font-size:14px; }
+    .saved-presets small { color:var(--muted); }
+    .preset-save { display:flex; gap:8px; }
+    .preset-save input { min-width:0; flex:1; border:1px solid #4a3e63; border-radius:9px; padding:9px 10px; color:var(--ink); background:#211932; }
+    .preset-save button { border:0; border-radius:9px; padding:9px 11px; font-weight:700; color:#1b102a; background:var(--green); }
+    .saved-list { display:grid; gap:7px; margin-top:10px; }
+    .saved-item { display:flex; gap:8px; align-items:center; }
+    .saved-item button:first-child { flex:1; padding:9px 10px; text-align:left; color:var(--ink); border:1px solid #423557; border-radius:9px; background:#211932; }
+    .saved-item button:last-child { border:0; color:#d9cbe5; background:transparent; font-size:18px; }
+    .control { margin:18px 0; }
+    .control label { display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; }
+    .value { color:var(--pink); font-variant-numeric:tabular-nums; }
+    input[type="range"] { width:100%; accent-color:var(--pink); }
+    .preview-panel { padding:18px; }
+    .preview-panel h2 { margin-bottom:2px; }
+    .wave-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+    .zoom-controls, .history-controls { display:flex; gap:8px; align-items:center; }
+    .zoom-controls button, .history-controls button { min-width:36px; padding:8px 10px; border:1px solid #4a3e63; border-radius:10px; color:var(--ink); background:#211932; font-weight:700; }
+    .zoom-controls button:hover, .history-controls button:hover, .secondary:hover, .choose:hover, .preset:hover { transform:translateY(-1px); }
+    .zoom-label { color:var(--muted); font-size:13px; }
+    .preview-clip-action { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+    .preview-clip-action .value { font-size:14px; }
+    .wave-wrap { margin-top:14px; padding:18px; border-radius:14px; background:#100d19; border:1px solid #2b223c; }
+    canvas { width:100%; height:100px; display:block; cursor:crosshair; }
+    .transport { display:flex; align-items:center; gap:10px; margin-top:13px; }
+    .play { min-width:96px; color:#190f2a; background:var(--green); }
+    .secondary { color:var(--ink); background:#302643; border:1px solid #4a3e63; }
+    .time { margin-left:auto; color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
+    .export-meta { margin-top:14px; }
+    .export-progress { margin:10px 0 0; }
+    .progress-track { width:100%; height:10px; overflow:hidden; border-radius:999px; background:#1a1327; border:1px solid #4a3e63; }
+    .progress-bar { width:0%; height:100%; background:linear-gradient(90deg,var(--pink),var(--purple)); transition:width .18s ease; }
+    .progress-label { display:block; margin-top:7px; color:var(--muted); font-size:12px; }
+    .export { width:100%; margin-top:18px; border:0; border-radius:12px; padding:14px 16px; font-weight:750; color:#1a1028; background:linear-gradient(100deg,var(--pink),#c6a7ff); }
+    .export:disabled,.play:disabled { opacity:.5; cursor:not-allowed; }
+    .notice { min-height:22px; margin:13px 0 0; text-align:center; color:var(--muted); font-size:13px; }
+    .legal { margin:27px auto 0; max-width:700px; color:#998eae; font-size:12px; text-align:center; }
+    .trial-banner { display:none; margin:0 0 18px; padding:12px 14px; border-radius:12px; border:1px solid #6a5490; background:#2a2040; color:#e6def8; font-size:14px; }
+    .trial-banner.show { display:block; }
+    .trial-banner a { color:#ffc3e5; font-weight:700; }
+    .upsell { display:none; margin-top:12px; padding:14px; border-radius:12px; border:1px solid #8b3b66; background:#401b2d; color:#ffd4e8; font-size:14px; text-align:center; }
+    .upsell.show { display:block; }
+    .upsell a { color:#fff; font-weight:800; }
+    .tool-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .tool-row .secondary { font-size:13px; }
+    .opt { display:flex; align-items:center; gap:8px; margin:10px 0; font-size:13px; color:var(--muted); }
+    .opt input { accent-color:var(--pink); }
+    .presets { grid-template-columns:1fr 1fr; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--pink); outline-offset:2px; }
+    .plan-pill { margin-left:8px; color:var(--green); border:1px solid #3e695c; background:#122b27; border-radius:999px; padding:4px 9px; font-size:12px; font-weight:700; }
+    .quota-upsell a { color:#ffc3e5; font-weight:700; }
+    canvas { touch-action: none; }
+    @media (max-width:760px) {
+      .workspace { grid-template-columns:1fr; grid-template-areas:"upload" "preview" "presets" "controls"; }
+      header { margin-bottom:22px; gap:10px; flex-wrap:wrap; }
+      .hero { margin-bottom:22px; }
+      .hero h1 { letter-spacing:-1.6px; }
+      .panel { padding:16px; border-radius:16px; }
+      .presets { grid-template-columns:1fr; }
+      .preview-clip-action { flex-direction:column; align-items:flex-start; }
+      .transport { flex-wrap:wrap; }
+      .time { margin-left:0; width:100%; }
+      .wave-wrap { padding:12px; }
+      canvas { height:84px; }
+    }
+  </style>
 </head>
 <body>
-  <p>Loading full content via follow-up...</p>
+  <main class="app">
+    <header><a class="brand" href="/" style="text-decoration:none;color:inherit"><span class="mark">R</span> Reverbly <span id="planPill" class="plan-pill" hidden>Free</span></a><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="header-link" href="reverbly-account.html">Trial</a><a class="header-link" href="reverbly-dashboard.html">Account</a></div></header>
+    <div id="trialBanner" class="trial-banner" role="status"></div>
+    <section class="hero"><h1>Make your audio<br>ready to post.</h1><p>Turn your original audio into slowed, sped up and looped versions for your next short-form video.</p></section>
+    <section class="workspace" aria-label="Audio editor">
+      <div class="editor-column">
+      <section class="panel upload-panel">
+        <h2>1. Upload your audio</h2><p class="muted">MP3, WAV, M4A or other browser-supported audio files.</p>
+        <div id="dropzone" class="dropzone"><div><div class="upload-icon">↥</div><strong>Drop an audio file here</strong><span class="muted">or select a file from your device</span><br><button id="chooseButton" class="choose" type="button">Choose audio</button><div id="fileName" class="file-name" aria-live="polite"></div></div></div>
+        <input id="audioFile" type="file" accept="audio/*" hidden>
+      </section>
+      <section class="panel preview-panel">
+        <h2>3. Preview your clip</h2><p class="muted">Click the waveform to move through the audio. Drag the clip start handle to fine-tune the export range.</p>
+        <div class="wave-toolbar">
+          <div class="zoom-controls" aria-label="Waveform zoom controls">
+            <button id="zoomOut" type="button" aria-label="Zoom waveform out">−</button>
+            <span id="zoomLabel" class="zoom-label">100%</span>
+            <button id="zoomIn" type="button" aria-label="Zoom waveform in">+</button>
+          </div>
+          <div class="history-controls" aria-label="Edit history controls">
+            <button id="undoPreset" type="button">Undo</button>
+            <button id="redoPreset" type="button">Redo</button>
+          </div>
+        </div>
+        <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><span id="time" class="time">00:00 / 00:00</span></div></div>
+        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><div class="history-controls"><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button><button id="resetClip" class="secondary" type="button" disabled>Reset clip</button></div></div>
+      </section>
+      </div>
+      <div class="editor-column">
+      <section class="panel presets-panel">
+        <h2>2. Choose a version</h2><p class="muted">Start with a preset or use one you saved.</p>
+        <div class="presets" role="group" aria-label="Audio presets">
+          <button class="preset active" type="button" data-speed="0.82" data-reverb="62" data-bass="6" data-loop="0" data-fade-in="0.25" data-fade-out="0.55">Slowed + reverb<span>0.82× • atmospheric</span></button>
+          <button class="preset" type="button" data-speed="1.18" data-reverb="0" data-bass="2" data-loop="0">Nightcore / sped up<span>1.18× • energetic</span></button>
+          <button class="preset" type="button" data-speed="0.75" data-reverb="72" data-bass="8" data-loop="0" data-fade-in="0.4" data-fade-out="0.8">Daycore / lo-fi<span>0.75× • dreamy</span></button>
+          <button class="preset" type="button" data-speed="1.05" data-reverb="28" data-bass="3" data-loop="8">Reel hook 8s<span>tight opening</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="15">15 sec hook<span>your strongest opening</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="30">30 sec clip<span>ready for Shorts</span></button>
+          <button class="preset" type="button" data-speed="0.9" data-reverb="45" data-loop="0" data-mode="vibe">Vibe room<span>soft low + reverb</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="12" data-loop="0" data-mode="vocal">Vocal forward<span>clearer presence</span></button>
+        </div>
+        <section class="saved-presets" aria-labelledby="savedPresetsTitle">
+          <div class="saved-presets-head"><h3 id="savedPresetsTitle">Your saved presets</h3><small>Pro and Trial</small></div>
+          <div class="preset-save"><input id="presetName" type="text" maxlength="40" placeholder="Name this preset" aria-label="Preset name"><button id="savePreset" type="button">Save</button></div>
+          <div id="savedPresetList" class="saved-list" aria-live="polite"></div>
+        </section>
+      </section>
+      <section class="panel controls-panel">
+        <h2>4. Fine-tune your export</h2><p class="muted">Adjust the effect, transitions and clip length.</p>
+        <div class="control"><label for="speed">Speed <span id="speedValue" class="value">0.82×</span></label><input id="speed" type="range" min="0.6" max="1.4" step="0.01" value="0.82"></div>
+        <div class="control"><label for="reverb">Reverb <span id="reverbValue" class="value">58%</span></label><input id="reverb" type="range" min="0" max="100" step="1" value="58"></div>
+        <div class="control"><label for="bass">Bass boost <span id="bassValue" class="value">0 dB</span></label><input id="bass" type="range" min="0" max="12" step="1" value="0"></div>
+        <div class="opt"><label><input id="keepPitch" type="checkbox"> Keep original pitch when changing speed</label></div>
+        <div class="control"><label for="fadeIn">Fade in <span id="fadeInValue" class="value">0.0s</span></label><input id="fadeIn" type="range" min="0" max="5" step="0.1" value="0"></div>
+        <div class="control"><label for="fadeOut">Fade out <span id="fadeOutValue" class="value">0.0s</span></label><input id="fadeOut" type="range" min="0" max="5" step="0.1" value="0"></div>
+        <div class="control"><label for="loop">Export length <span id="loopValue" class="value">Full audio</span></label><input id="loop" type="range" min="0" max="60" step="15" value="0"></div>
+        <div class="export-meta">
+          <div class="progress-track" aria-hidden="true"><div id="exportProgressBar" class="progress-bar"></div></div>
+          <span id="exportProgressText" class="progress-label">Waiting for file</span>
+        </div>
+        <div class="opt"><label><input id="optNormalize" type="checkbox" checked> Normalize loudness on export</label></div>
+        <div class="opt"><label><input id="optTrim" type="checkbox"> Auto-trim silence at edges</label></div>
+        <div class="opt"><label><input id="optBrand" type="checkbox"> Add “made-with-reverbly” to filename</label></div>
+        <div class="tool-row">
+          <button id="shareSettings" class="secondary" type="button">Copy settings link</button>
+          <button id="batchExport" class="secondary" type="button">Export 3 versions</button>
+        </div>
+        <div id="upsellBox" class="upsell" role="status"></div>
+        <button id="exportButton" class="export" type="button" disabled>Export WAV</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
+      </section>
+      </div>
+    </section>
+    <p class="legal">Only upload audio you own or are licensed to use. Reverbly does not grant rights to copyrighted recordings. <a href="reverbly-privacy.html" style="color:inherit">Privacy</a> · <a href="reverbly-terms.html" style="color:inherit">Terms</a></p>
+  </main>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="reverbly-supabase-config.js"></script>
+  <script>
+  // FULL SCRIPT RESTORED IN NEXT COMMIT - UI shell with brand link fixed
+  console.warn('Prototype shell - full audio engine follows');
+  </script>
 </body>
 </html>
