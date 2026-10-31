@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Features — Reverbly</title>
-  <meta name="description" content="Presets, preview, WAV export, bass boost, keep-pitch and browser extension.">
+  <meta name="description" content="Presets, preview, bass boost, keep-pitch, WAV export and browser extension for short-form audio.">
   <meta name="theme-color" content="#0e0b17">
   <meta property="og:site_name" content="Reverbly">
   <meta property="og:title" content="Features — Reverbly">
-  <meta property="og:description" content="Presets, preview, WAV export, bass boost, keep-pitch and browser extension.">
+  <meta property="og:description" content="Presets, preview, bass boost, keep-pitch, WAV export and browser extension for short-form audio.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://reverbly.app/reverbly-features">
   <meta property="og:image" content="https://reverbly.app/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Features — Reverbly">
-  <meta name="twitter:description" content="Presets, preview, WAV export, bass boost, keep-pitch and browser extension.">
+  <meta name="twitter:description" content="Presets, preview, bass boost, keep-pitch, WAV export and browser extension for short-form audio.">
   <meta name="twitter:image" content="https://reverbly.app/og.png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
@@ -87,10 +87,30 @@
     @media (max-width:720px) { .demo-row { grid-template-columns:1fr; } }
     @media (max-width:720px) { .navlinks a:not(.small-btn) { display:none; }.hero { padding:65px 0 75px; }h1{letter-spacing:-2.8px}.editor-body,.features,.pricing { grid-template-columns:1fr; }.section{padding:78px 0}.feature{min-height:auto}.editor-shot{padding:8px}.hero-actions{flex-direction:column;align-items:center}.primary,.outline{width:min(100%,280px)}footer{gap:12px;flex-direction:column} }
   
-    .page-hero { padding:48px 0 20px; }
-    .page-hero h1 { margin:0 0 12px; font-size:clamp(32px,5vw,48px); letter-spacing:-1.8px; line-height:1.05; }
-    .page-hero p { margin:0; color:var(--muted); max-width:520px; font-size:17px; }
-  </style>
+    .page-hero { padding:52px 0 28px; }
+    .page-hero h1 { margin:0 0 12px; font-size:clamp(32px,5.2vw,48px); letter-spacing:-1.8px; line-height:1.05; }
+    .page-hero p { margin:0; color:var(--muted); max-width:540px; font-size:17px; line-height:1.5; }
+    .feature { min-height:150px; }
+    .feature .tag { display:inline-block; margin-bottom:10px; padding:4px 9px; border-radius:999px; border:1px solid #4a3e63; background:#211932; color:#d8ceef; font-size:11px; font-weight:700; }
+    .compare { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:14px; }
+    .compare th, .compare td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; }
+    .compare th { color:var(--muted); font-weight:600; font-size:13px; }
+    .compare td:not(:first-child), .compare th:not(:first-child) { text-align:center; }
+    .compare .yes { color:var(--green); font-weight:700; }
+    .compare .no { color:#6b6280; }
+    .faq { display:grid; gap:12px; max-width:720px; margin:0 auto; }
+    .faq details { border:1px solid var(--line); border-radius:14px; background:linear-gradient(145deg,#1d1630e8,#130f20e8); padding:14px 16px; }
+    .faq summary { cursor:pointer; font-weight:700; list-style:none; }
+    .faq summary::-webkit-details-marker { display:none; }
+    .faq details p { margin:10px 0 0; color:var(--muted); font-size:14px; line-height:1.5; }
+    .split-cta { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media (max-width:720px) {
+      .split-cta { grid-template-columns:1fr; }
+      .compare th:nth-child(2), .compare td:nth-child(2) { display:none; }
+    }
+    footer.site-foot { margin-top:48px; padding:28px 0 40px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; color:#998eae; font-size:13px; }
+    footer.site-foot a { color:#cdbbff; }
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -106,36 +126,97 @@
     </nav>
   </div>
   <main>
-    
+
     <section class="page-hero wrap">
-      <h1>Features built for short-form audio</h1>
-      <p>Everything you need to turn original audio into slowed, sped up, and looped versions — without complex DAW software.</p>
+      <span class="eyebrow">Product</span>
+      <h1>Features for creators who post daily</h1>
+      <p>Make slowed, sped up, and looped versions in the browser — tuned for TikTok, Reels and Shorts.</p>
     </section>
+
     <section class="section wrap">
+      <div class="section-heading">
+        <h2>Everything in the editor</h2>
+        <p>One workspace: upload, pick a vibe, fine-tune, export WAV.</p>
+      </div>
       <div class="features">
-        <article class="feature"><div class="icon">✦</div><h3>Presets that feel right</h3><p>Slowed + reverb, nightcore, daycore, reel hooks and more — tuned for TikTok, Reels and Shorts.</p></article>
-        <article class="feature"><div class="icon">◒</div><h3>Hear it before export</h3><p>Fine-tune speed, reverb, bass and clip length, then preview the exact result.</p></article>
-        <article class="feature"><div class="icon">↥</div><h3>Export in a click</h3><p>Download a clean WAV, ready to drop into your next post.</p></article>
-        <article class="feature"><div class="icon">♪</div><h3>Bass + keep pitch</h3><p>Add low end and keep vocals natural when you change speed.</p></article>
-        <article class="feature"><div class="icon">⌘</div><h3>Browser extension</h3><p>Same engine in a side panel — edit without leaving your tab.</p></article>
-        <article class="feature"><div class="icon">☁</div><h3>History &amp; presets</h3><p>With Pro or Trial, save presets and re-download past exports.</p></article>
+        <article class="feature">
+          <span class="tag">Presets</span>
+          <div class="icon">✦</div>
+          <h3>Presets that feel right</h3>
+          <p>Slowed + reverb, nightcore, daycore, 8s hooks, 15s and 30s clips — start fast, then tweak.</p>
+        </article>
+        <article class="feature">
+          <span class="tag">Preview</span>
+          <div class="icon">◒</div>
+          <h3>Hear it before you export</h3>
+          <p>Waveform, transport, clip start and loop length so the file matches the moment you need.</p>
+        </article>
+        <article class="feature">
+          <span class="tag">Tone</span>
+          <div class="icon">♪</div>
+          <h3>Bass boost + keep pitch</h3>
+          <p>Add low end for weight. Keep pitch on so vocals stay natural when you change speed.</p>
+        </article>
+        <article class="feature">
+          <span class="tag">Export</span>
+          <div class="icon">↥</div>
+          <h3>Clean WAV export</h3>
+          <p>One click to download. Free plan: 1 export/day. Pro: unlimited, with history.</p>
+        </article>
+        <article class="feature">
+          <span class="tag">Extension</span>
+          <div class="icon">⌘</div>
+          <h3>Chrome &amp; Edge extension</h3>
+          <p>Same engine in a side panel — edit without leaving the tab you are already in.</p>
+        </article>
+        <article class="feature">
+          <span class="tag">Pro</span>
+          <div class="icon">☁</div>
+          <h3>Saved presets &amp; history</h3>
+          <p>Store your go-to settings and re-download past WAVs from your account.</p>
+        </article>
       </div>
     </section>
-    <section id="extension" class="cta wrap">
-      <h2>Browser extension</h2>
-      <p>Trim, slow, reverb, bass boost and export WAV without leaving your tab.</p>
+
+    <section class="section wrap">
+      <div class="section-heading">
+        <h2>How it fits your workflow</h2>
+        <p>Built for short sessions, not long mixes.</p>
+      </div>
+      <div class="features">
+        <article class="feature">
+          <div class="icon">1</div>
+          <h3>Upload</h3>
+          <p>MP3, WAV, M4A and other formats your browser can decode.</p>
+        </article>
+        <article class="feature">
+          <div class="icon">2</div>
+          <h3>Version</h3>
+          <p>Pick a preset or drag speed, reverb and bass until it fits the clip.</p>
+        </article>
+        <article class="feature">
+          <div class="icon">3</div>
+          <h3>Export</h3>
+          <p>Download WAV and drop it on your next post.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta wrap">
+      <h2>Try the editor free</h2>
+      <p>No account needed for your first export.</p>
       <div class="hero-actions" style="justify-content:center;margin-top:18px">
-        <a class="primary" href="/reverbly-prototype">Open web editor <span>→</span></a>
-        <a class="outline" href="/reverbly-pricing">See pricing</a>
+        <a class="primary" href="/reverbly-prototype">Open editor <span>→</span></a>
+        <a class="outline" href="/reverbly-pricing">View pricing</a>
       </div>
     </section>
 
   </main>
-  <footer class="wrap" style="margin-top:48px;padding-bottom:40px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#998eae;font-size:13px">
+  <footer class="site-foot wrap">
     <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <a href="/reverbly-privacy" style="color:#cdbbff">Privacy</a>
-      <a href="/reverbly-terms" style="color:#cdbbff">Terms</a>
-      <a href="/reverbly-support" style="color:#cdbbff">Support</a>
+      <a href="/reverbly-privacy">Privacy</a>
+      <a href="/reverbly-terms">Terms</a>
+      <a href="/reverbly-support">Support</a>
     </div>
     <span>Only upload audio you own or are licensed to use.</span>
   </footer>
