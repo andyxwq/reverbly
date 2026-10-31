@@ -73,6 +73,9 @@
     .preview-panel h2 { margin-bottom:2px; }
     .wave-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
     .zoom-controls, .history-controls { display:flex; gap:8px; align-items:center; }
+    .ab-btn { border:1px solid #4a3e63; border-radius:10px; padding:10px 12px; font-weight:700; color:var(--ink); background:#211933; cursor:pointer; font:inherit; }
+    .ab-btn.active { border-color:var(--pink); color:#1b102a; background:linear-gradient(105deg,var(--pink),#bea3ff); }
+    .transport { flex-wrap:wrap; }
     .zoom-controls button, .history-controls button { min-width:36px; padding:8px 10px; border:1px solid #4a3e63; border-radius:10px; color:var(--ink); background:#211932; font-weight:700; }
     .zoom-controls button:hover, .history-controls button:hover, .secondary:hover, .choose:hover, .preset:hover { transform:translateY(-1px); }
     .zoom-label { color:var(--muted); font-size:13px; }
@@ -118,6 +121,8 @@
     .sticky-export { display:none; }
     @media (max-width:760px) {
       .step-nav { display:flex; position:sticky; top:0; z-index:30; }
+      .preview-panel .history-controls { margin-top:8px; }
+      .preview-panel .history-controls button { flex:1; min-height:40px; font-weight:700; }
       .hero { display:none; }
       .workspace { gap:12px; }
       .workspace[data-step="1"] .presets-panel,
@@ -183,7 +188,7 @@
             <button id="redoPreset" type="button">Redo</button>
           </div>
         </div>
-        <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><span id="time" class="time">00:00 / 00:00</span></div></div>
+        <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><button id="abButton" class="ab-btn" type="button" disabled title="Compare dry original vs Reverbly effect">A/B original</button><span id="time" class="time">00:00 / 00:00</span></div></div>
         <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><div class="history-controls"><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button><button id="resetClip" class="secondary" type="button" disabled>Reset clip</button></div></div>
       </section>
       </div>
@@ -222,6 +227,7 @@
         
         <div class="opt"><label><input id="optNormalize" type="checkbox" checked> Normalize loudness on export</label></div>
         <div class="opt"><label><input id="optTrim" type="checkbox"> Auto-trim silence at edges</label></div>
+        <div class="opt"><label><input id="optSeamless" type="checkbox"> Seamless loop (crossfade edges)</label></div>
         <div class="opt"><label><input id="optBrand" type="checkbox"> Add “made-with-reverbly” to filename</label></div>
         <div class="tool-row">
           <button id="shareSettings" class="secondary" type="button">Copy settings link</button>
@@ -245,7 +251,9 @@
     const chooseButton = document.getElementById('chooseButton'), fileName = document.getElementById('fileName');
     const speed = document.getElementById('speed'), reverb = document.getElementById('reverb'), bass = document.getElementById('bass'), keepPitch = document.getElementById('keepPitch'), fadeIn = document.getElementById('fadeIn'), fadeOut = document.getElementById('fadeOut'), loop = document.getElementById('loop');
     const speedValue = document.getElementById('speedValue'), reverbValue = document.getElementById('reverbValue'), bassValue = document.getElementById('bassValue'), fadeInValue = document.getElementById('fadeInValue'), fadeOutValue = document.getElementById('fadeOutValue'), loopValue = document.getElementById('loopValue');
-    const playButton = document.getElementById('playButton'), stopButton = document.getElementById('stopButton'), exportButton = document.getElementById('exportButton');
+    const playButton = document.getElementById('playButton'), stopButton = document.getElementById('stopButton'), exportButton = document.getElementById('exportButton'), abButton = document.getElementById('abButton');
+    const optSeamless = document.getElementById('optSeamless');
+    let abOriginal = false;
     const notice = document.getElementById('notice'), canvas = document.getElementById('waveform'), ctx = canvas.getContext('2d'), time = document.getElementById('time'), seek = document.getElementById('seek'), setClipStart = document.getElementById('setClipStart'), resetClip = document.getElementById('resetClip'), clipStartValue = document.getElementById('clipStartValue'), clipEndValue = document.getElementById('clipEndValue'), presetName = document.getElementById('presetName'), savePreset = document.getElementById('savePreset'), savedPresetList = document.getElementById('savedPresetList');
     const undoPreset = document.getElementById('undoPreset'), redoPreset = document.getElementById('redoPreset'), zoomIn = document.getElementById('zoomIn'), zoomOut = document.getElementById('zoomOut'), zoomLabel = document.getElementById('zoomLabel');
     const exportProgressBar = document.getElementById('exportProgressBar'), exportProgressText = document.getElementById('exportProgressText');
@@ -393,7 +401,14 @@
       }
       return buffer;
     }
-    function graph(ac, destination, startOffset=clipStart) { const src=ac.createBufferSource(); src.buffer=audioBuffer; const rate=Number(speed.value); src.playbackRate.value=rate; if (keepPitch && keepPitch.checked && rate > 0) src.detune.value = -1200 * Math.log(rate) / Math.LN2; const dry=ac.createGain(); const wet=ac.createGain(); const master=ac.createGain(); const conv=ac.createConvolver(); const amount=Number(reverb.value), duration=clipLength()/Number(speed.value), elapsed=Math.max(0,(startOffset-clipStart)/Number(speed.value)), remaining=Math.max(0,duration-elapsed), inSeconds=Math.min(Number(fadeIn.value),duration/2), outSeconds=Math.min(Number(fadeOut.value),duration/2), now=ac.currentTime; conv.buffer=impulse(ac,amount); const a01=Math.max(0,Math.min(1,amount/100)); dry.gain.value=1-a01*0.52; wet.gain.value=a01*0.88;
+    function graph(ac, destination, startOffset=clipStart) { const src=ac.createBufferSource(); src.buffer=audioBuffer;
+      if (abOriginal) {
+        src.playbackRate.value = 1;
+        const g = ac.createGain(); g.gain.value = 1;
+        src.connect(g); g.connect(destination);
+        return src;
+      }
+      const rate=Number(speed.value); src.playbackRate.value=rate; if (keepPitch && keepPitch.checked && rate > 0) src.detune.value = -1200 * Math.log(rate) / Math.LN2; const dry=ac.createGain(); const wet=ac.createGain(); const master=ac.createGain(); const conv=ac.createConvolver(); const amount=Number(reverb.value), duration=clipLength()/Number(speed.value), elapsed=Math.max(0,(startOffset-clipStart)/Number(speed.value)), remaining=Math.max(0,duration-elapsed), inSeconds=Math.min(Number(fadeIn.value),duration/2), outSeconds=Math.min(Number(fadeOut.value),duration/2), now=ac.currentTime; conv.buffer=impulse(ac,amount); const a01=Math.max(0,Math.min(1,amount/100)); dry.gain.value=1-a01*0.52; wet.gain.value=a01*0.88;
       const gainAtStart = inSeconds && elapsed < inSeconds ? elapsed/inSeconds : outSeconds && elapsed > duration-outSeconds ? Math.max(0,(duration-elapsed)/outSeconds) : 1;
       master.gain.setValueAtTime(gainAtStart,now);
       if(inSeconds && elapsed < inSeconds) master.gain.linearRampToValueAtTime(1,now+inSeconds-elapsed);
@@ -443,9 +458,9 @@
     }
     function setPosition(seconds) { if(!audioBuffer) return; currentOffset=Math.max(clipStart,Math.min(seconds,previewEnd())); seek.value=String(clipLength() ? (currentOffset-clipStart)/clipLength()*100 : 0); time.textContent=`${formatTime(currentOffset)} / ${formatTime(previewEnd())}`; drawWave(currentOffset/audioBuffer.duration); }
     function stop(reset=true) { if(source){ source.onended=null; source.stop(); source.disconnect(); source=null; } cancelAnimationFrame(animation); if(reset) currentOffset=clipStart; playButton.textContent='▶ Play'; setPosition(currentOffset); }
-    function tick() { if(!source || !context) return; const elapsed=(context.currentTime-startedAt)*Number(speed.value)+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(tick); }
-    function play() { if(!audioBuffer) return; if(!context) context=new AudioContext(); if(context.state==='suspended') context.resume(); if(source){ stop(false); return; } const end=previewEnd(); if(currentOffset>=end) currentOffset=clipStart; playOffset=currentOffset; source=graph(context,context.destination,currentOffset); source.onended=()=>stop(true); startedAt=context.currentTime; source.start(0,currentOffset,end-currentOffset); playButton.textContent='■ Pause'; tick(); }
-    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart'));
+    function tick(playRate) { if(!source || !context) return; const rate = playRate != null ? playRate : (abOriginal ? 1 : Number(speed.value)); const elapsed=(context.currentTime-startedAt)*rate+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(function(){ tick(rate); }); }
+    function play() { if(!audioBuffer) return; if(!context) context=new AudioContext(); if(context.state==='suspended') context.resume(); if(source){ stop(false); return; } const end=previewEnd(); if(currentOffset>=end) currentOffset=clipStart; playOffset=currentOffset; source=graph(context,context.destination,currentOffset); source.onended=()=>stop(true); startedAt=context.currentTime; const playRate = abOriginal ? 1 : Number(speed.value); source.start(0,currentOffset, Math.max(0.05, (end-currentOffset))); playButton.textContent='■ Pause'; tick(playRate); }
+    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing' || currentPlan === 'plus') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing' || currentPlan === 'plus') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; if(abButton) abButton.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart'));
       clipStart = 0;
       clipEnd = audioBuffer.duration;
       if (loop.value !== '0' && Number.isFinite(Number(loop.value))) {
@@ -455,7 +470,7 @@
       } else if (Number.isFinite(requestedClipStart) && requestedClipStart > 0) {
         clipStart = Math.max(0, Math.min(requestedClipStart, audioBuffer.duration - 0.05));
       }
-      fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
+      fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; if(abButton) abButton.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
 
     function updateTrialBanner() {
       if (!trialBanner) return;
@@ -584,14 +599,15 @@
         return;
       }
       updateProgress(20, 'Rendering audio…');
-      notice.textContent = 'Rendering your audio…';
+      notice.textContent = 'Rendering ' + formatTime(clipStart) + ' → ' + formatTime(previewEnd()) + '…';
       const rate = Number(speed.value), reverbAmt = Math.max(0, Math.min(1, Number(reverb.value)/100)), tailSec = reverbAmt > 0.02 ? (0.55 + reverbAmt * 3.6) * 0.9 : 0, length = Math.ceil((clipLength() / rate + tailSec) * audioBuffer.sampleRate);
       const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
       const src = graph(offline, offline.destination);
       src.start(0, clipStart, clipLength());
       const rendered0 = await offline.startRendering();
       updateProgress(70, 'Normalizing…');
-      const rendered = (optNormalize && optNormalize.checked) ? normalizeBuffer(rendered0) : rendered0;
+      let rendered = (optNormalize && optNormalize.checked) ? normalizeBuffer(rendered0) : rendered0;
+      if (optSeamless && optSeamless.checked) rendered = applySeamlessLoop(rendered);
       updateProgress(85, 'Encoding WAV…');
             const formatEl = document.getElementById('exportFormat');
       const format = (formatEl && formatEl.value) === 'mp3' ? 'mp3' : 'wav';
@@ -617,11 +633,30 @@
       link.download = outputName;
       link.click();
       URL.revokeObjectURL(link.href);
-      notice.textContent = quota.message || ('Your ' + (document.getElementById('exportFormat')?.value === 'mp3' ? 'MP3' : 'WAV') + ' download has started.');
+      notice.textContent = quota.message || ('Exported ' + formatTime(clipStart) + '–' + formatTime(previewEnd()) + ' as ' + ((document.getElementById('exportFormat') && document.getElementById('exportFormat').value === 'mp3') ? 'MP3' : 'WAV') + '.');
       updateProgress(100, 'Download ready');
       await saveExportHistory(blob, outputName);
       if (window.reverblyTrack) window.reverblyTrack('export_success', { plan: currentPlan, speed: Number(speed.value), reverb: Number(reverb.value) });
       exportButton.disabled = false;
+    }
+    function applySeamlessLoop(buffer) {
+      const fade = Math.min(0.12, buffer.duration * 0.15);
+      const n = Math.floor(fade * buffer.sampleRate);
+      if (n < 8) return buffer;
+      const out = new AudioBuffer({ length: buffer.length, numberOfChannels: buffer.numberOfChannels, sampleRate: buffer.sampleRate });
+      for (let c = 0; c < buffer.numberOfChannels; c++) {
+        const input = buffer.getChannelData(c);
+        const data = out.getChannelData(c);
+        data.set(input);
+        for (let i = 0; i < n; i++) {
+          const k = i / n;
+          const start = data[i];
+          const end = data[data.length - n + i];
+          data[i] = end * (1 - k) + start * k;
+          data[data.length - n + i] = start * (1 - k) + end * k;
+        }
+      }
+      return out;
     }
     function encodeWav(buffer) { const channels=buffer.numberOfChannels, length=buffer.length*channels*2, ab=new ArrayBuffer(44+length), v=new DataView(ab); const put=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}; put(0,'RIFF');v.setUint32(4,36+length,true);put(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*channels*2,true);v.setUint16(32,channels*2,true);v.setUint16(34,16,true);put(36,'data');v.setUint32(40,length,true);let offset=44;for(let i=0;i<buffer.length;i++)for(let c=0;c<channels;c++){const s=Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]));v.setInt16(offset,s<0?s*0x8000:s*0x7fff,true);offset+=2;}return ab; }
     function adjustZoom(direction) {
@@ -724,7 +759,18 @@
         if (event.shiftKey) restoreHistory('redo'); else restoreHistory('undo');
       }
     });
-    playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=exportWav; savePreset.onclick=saveCurrentPreset; presetName.onkeydown=event=>{if(event.key==='Enter')saveCurrentPreset();}; 
+    playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=exportWav;
+    if (abButton) {
+      abButton.onclick = function () {
+        if (!audioBuffer) return;
+        abOriginal = !abOriginal;
+        abButton.classList.toggle('active', abOriginal);
+        abButton.textContent = abOriginal ? 'A/B: original' : 'A/B original';
+        notice.textContent = abOriginal ? 'Playing dry original (no effects). Toggle again for Reverbly sound.' : 'Reverbly effect on.';
+        if (source) { stop(false); play(); }
+      };
+    }
+ savePreset.onclick=saveCurrentPreset; presetName.onkeydown=event=>{if(event.key==='Enter')saveCurrentPreset();}; 
     shareSettings.onclick = async () => {
       const url = settingsUrl();
       try {
@@ -737,9 +783,9 @@
     };
     batchExport.onclick = async () => {
       if (!audioBuffer) { notice.textContent = 'Upload audio first.'; return; }
-      if (!(currentPlan === 'pro' || currentPlan === 'trialing')) {
-        showUpsell('Batch export (3 versions) is available on Trial and Pro.');
-        notice.textContent = 'Batch export needs Trial or Pro.';
+      if (!(currentPlan === 'pro' || currentPlan === 'trialing' || currentPlan === 'plus')) {
+        showUpsell('Batch export (3 versions) is available on Plus, Trial and Pro.');
+        notice.textContent = 'Batch export needs Plus, Trial or Pro.';
         return;
       }
       const versions = [
@@ -763,6 +809,12 @@
     };
     if (historySettings.get('mode')) processMode = historySettings.get('mode');
     pushHistoryState(); applyHistorySettings(); loadLastSettings(); updateLabels(); loadSavedPresets();
+    (function () {
+      var fmt = document.getElementById('exportFormat');
+      if (fmt && window.matchMedia && window.matchMedia('(max-width: 760px)').matches) {
+        fmt.value = 'mp3';
+      }
+    })();
   
     // Mobile step navigation
     (function () {
