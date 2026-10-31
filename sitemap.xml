@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://reverbly.app/</loc></url>
+  <url><loc>https://reverbly.app/reverbly-features</loc></url>
+  <url><loc>https://reverbly.app/reverbly-pricing</loc></url>
+  <url><loc>https://reverbly.app/reverbly-examples</loc></url>
   <url><loc>https://reverbly.app/reverbly-prototype</loc></url>
   <url><loc>https://reverbly.app/reverbly-account</loc></url>
   <url><loc>https://reverbly.app/reverbly-dashboard</loc></url>
-  <url><loc>https://reverbly.app/reverbly-examples</loc></url>
   <url><loc>https://reverbly.app/reverbly-privacy</loc></url>
   <url><loc>https://reverbly.app/reverbly-terms</loc></url>
   <url><loc>https://reverbly.app/reverbly-support</loc></url>
