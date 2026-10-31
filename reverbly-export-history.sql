@@ -6,8 +6,10 @@ alter table public.exports add column if not exists clip_start_seconds numeric(1
 alter table public.exports add column if not exists storage_path text;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('exports', 'exports', false, 104857600, array['audio/wav'])
-on conflict (id) do nothing;
+values ('exports', 'exports', false, 104857600, array['audio/wav', 'audio/mpeg', 'audio/mp3'])
+on conflict (id) do update
+set allowed_mime_types = array['audio/wav', 'audio/mpeg', 'audio/mp3'],
+    file_size_limit = 104857600;
 
 drop policy if exists "Users can read their export files" on storage.objects;
 create policy "Users can read their export files"
