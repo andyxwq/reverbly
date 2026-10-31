@@ -185,7 +185,7 @@
       } else if (subscription?.status === 'canceled' || subscription?.status === 'past_due') {
         subscriptionNote.textContent = 'Subscription status: ' + subscription.status + '. You can start a new trial when ready.';
       } else {
-        subscriptionNote.textContent = 'You are on the Free plan (1 export per day). Start a 7-day trial for unlimited exports.';
+        subscriptionNote.textContent = 'You are on the Free plan (1 export per day). Get Plus ($3.99) for unlimited exports, or try Pro ($7.99).';
         const compare = document.getElementById('planCompare');
         if (compare) {
           compare.classList.remove('hidden');
