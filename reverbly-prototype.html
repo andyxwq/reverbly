@@ -171,7 +171,7 @@
         <input id="audioFile" type="file" accept="audio/*" hidden>
       </section>
       <section class="panel preview-panel">
-        <h2>3. Preview your clip</h2><p class="muted">Click the waveform to move through the audio. Drag the clip start handle to fine-tune the export range.</p>
+        <h2>3. Preview your clip</h2><p class="muted">Drag the pink handles to trim start and end. Click inside the selection to seek.</p>
         <div class="wave-toolbar">
           <div class="zoom-controls" aria-label="Waveform zoom controls">
             <button id="zoomOut" type="button" aria-label="Zoom waveform out">−</button>
@@ -253,7 +253,7 @@
     const shareSettings = document.getElementById('shareSettings'), batchExport = document.getElementById('batchExport'), upsellBox = document.getElementById('upsellBox'), trialBanner = document.getElementById('trialBanner');
     let processMode = 'normal', trialEndsAt = null;
     const reverblyAuth = window.reverblySupabaseClient;
-    let context, audioBuffer, source, startedAt = 0, playOffset = 0, currentOffset = 0, clipStart = 0, dragHandle = null, animation, savedPresets = [], currentPlan = 'free';
+    let context, audioBuffer, source, startedAt = 0, playOffset = 0, currentOffset = 0, clipStart = 0, clipEnd = 0, dragHandle = null, animation, savedPresets = [], currentPlan = 'free';
     let zoomLevel = 1, historyStack = [], historyIndex = -1;
     const historySettings = new URLSearchParams(location.search);
     const formatTime = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(Math.floor(seconds % 60)).padStart(2,'0')}`;
@@ -332,7 +332,27 @@
       if (!audioBuffer) { ctx.strokeStyle='#493b5d'; ctx.beginPath(); for(let x=0;x<w;x+=8){ const y=h/2+Math.sin(x*.075)*7; x?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke(); return; }
       const data=audioBuffer.getChannelData(0), step=Math.ceil(data.length/w), amp=h*.42; ctx.strokeStyle='#bda5ff'; ctx.lineWidth=2; ctx.beginPath();
       for(let x=0;x<w;x++){ let min=1,max=-1; for(let i=0;i<step;i++){ const v=data[x*step+i]||0; if(v<min)min=v;if(v>max)max=v; } ctx.moveTo(x,(1+min)*amp+h*.08);ctx.lineTo(x,(1+max)*amp+h*.08); } ctx.stroke();
-      if(loop.value!=='0'){ const startX=clipStart/audioBuffer.duration*w,endX=previewEnd()/audioBuffer.duration*w; ctx.fillStyle='rgba(8,6,15,.58)';ctx.fillRect(0,0,startX,h);ctx.fillRect(endX,0,w-endX,h);ctx.fillStyle='rgba(159,124,255,.15)';ctx.fillRect(startX,0,endX-startX,h);ctx.strokeStyle='#ff77c8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(startX,0);ctx.lineTo(startX,h);ctx.moveTo(endX,0);ctx.lineTo(endX,h);ctx.stroke();ctx.fillStyle='#ff77c8';ctx.fillRect(startX-5,0,10,8);ctx.fillRect(endX-5,0,10,8); }
+      {
+        const startX = clipStart / audioBuffer.duration * w;
+        const endX = previewEnd() / audioBuffer.duration * w;
+        ctx.fillStyle = 'rgba(8,6,15,.55)';
+        ctx.fillRect(0, 0, startX, h);
+        ctx.fillRect(endX, 0, w - endX, h);
+        ctx.fillStyle = 'rgba(159,124,255,.16)';
+        ctx.fillRect(startX, 0, Math.max(2, endX - startX), h);
+        ctx.strokeStyle = '#ff77c8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(startX, 0); ctx.lineTo(startX, h);
+        ctx.moveTo(endX, 0); ctx.lineTo(endX, h);
+        ctx.stroke();
+        const hw = 6, hh = 14;
+        ctx.fillStyle = '#ff77c8';
+        ctx.fillRect(startX - hw / 2, 0, hw, hh);
+        ctx.fillRect(endX - hw / 2, 0, hw, hh);
+        ctx.fillRect(startX - hw / 2, h - hh, hw, hh);
+        ctx.fillRect(endX - hw / 2, h - hh, hw, hh);
+      }
       ctx.fillStyle='#ff77c8'; ctx.fillRect(Math.min(w-2,progress*w), 0, 3, h);
       ctx.fillStyle='rgba(159,124,255,.28)'; ctx.fillRect(0, h-20, w, 20);
     }
@@ -392,15 +412,51 @@
       if (processMode === 'vibe') { const lp = ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3200; node.connect(lp); node = lp; }
       else if (processMode === 'vocal') { const hp = ac.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=120; const pk=ac.createBiquadFilter(); pk.type='peaking'; pk.frequency.value=2800; pk.gain.value=3; node.connect(hp).connect(pk); node = pk; }
       node.connect(dry).connect(master).connect(destination); node.connect(conv).connect(wet).connect(master); return src; }
-    function clipLength() { return loop.value==='0' ? audioBuffer.duration : Math.min(Number(loop.value), audioBuffer.duration-clipStart); }
-    function previewEnd() { return clipStart+clipLength(); }
-    function normalizeClipStart() { if(!audioBuffer || loop.value==='0') { clipStart=0; return; } clipStart=Math.max(0,Math.min(clipStart,audioBuffer.duration-Number(loop.value))); }
-    function refreshClipStart() { normalizeClipStart(); clipStartValue.textContent=loop.value==='0'?'Beginning':formatTime(clipStart); clipEndValue.textContent=loop.value==='0'?'End of file':formatTime(previewEnd()); setClipStart.disabled=!audioBuffer||loop.value==='0'; resetClip.disabled=!audioBuffer; }
+    function clipLength() {
+      if (!audioBuffer) return 0;
+      const end = (clipEnd > 0) ? Math.min(clipEnd, audioBuffer.duration) : audioBuffer.duration;
+      return Math.max(0.05, end - clipStart);
+    }
+    function previewEnd() { return clipStart + clipLength(); }
+    function syncLoopFromRegion() {
+      if (!audioBuffer) return;
+      const len = clipLength();
+      const isFull = clipStart <= 0.001 && Math.abs(previewEnd() - audioBuffer.duration) < 0.05;
+      if (isFull) loop.value = '0';
+      else if (len <= 60) loop.value = String(Math.max(15, Math.min(60, Math.round(len / 15) * 15 || 15)));
+      else loop.value = '60';
+      updateLabels();
+    }
+    function normalizeClipStart() {
+      if (!audioBuffer) return;
+      if (clipEnd <= 0 || clipEnd > audioBuffer.duration) clipEnd = audioBuffer.duration;
+      clipStart = Math.max(0, Math.min(clipStart, audioBuffer.duration - 0.05));
+      if (clipEnd <= clipStart + 0.05) clipEnd = Math.min(audioBuffer.duration, clipStart + 0.05);
+    }
+    function refreshClipStart() {
+      normalizeClipStart();
+      const full = audioBuffer && clipStart <= 0.001 && Math.abs(previewEnd() - audioBuffer.duration) < 0.05;
+      clipStartValue.textContent = full ? 'Beginning' : formatTime(clipStart);
+      clipEndValue.textContent = full ? 'End of file' : formatTime(previewEnd());
+      if (setClipStart) setClipStart.disabled = !audioBuffer;
+      if (resetClip) resetClip.disabled = !audioBuffer;
+      if (audioBuffer) drawWave(currentOffset / audioBuffer.duration);
+    }
     function setPosition(seconds) { if(!audioBuffer) return; currentOffset=Math.max(clipStart,Math.min(seconds,previewEnd())); seek.value=String(clipLength() ? (currentOffset-clipStart)/clipLength()*100 : 0); time.textContent=`${formatTime(currentOffset)} / ${formatTime(previewEnd())}`; drawWave(currentOffset/audioBuffer.duration); }
     function stop(reset=true) { if(source){ source.onended=null; source.stop(); source.disconnect(); source=null; } cancelAnimationFrame(animation); if(reset) currentOffset=clipStart; playButton.textContent='▶ Play'; setPosition(currentOffset); }
     function tick() { if(!source || !context) return; const elapsed=(context.currentTime-startedAt)*Number(speed.value)+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(tick); }
     function play() { if(!audioBuffer) return; if(!context) context=new AudioContext(); if(context.state==='suspended') context.resume(); if(source){ stop(false); return; } const end=previewEnd(); if(currentOffset>=end) currentOffset=clipStart; playOffset=currentOffset; source=graph(context,context.destination,currentOffset); source.onended=()=>stop(true); startedAt=context.currentTime; source.start(0,currentOffset,end-currentOffset); playButton.textContent='■ Pause'; tick(); }
-    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart')); clipStart=loop.value==='0' || !Number.isFinite(requestedClipStart) ? 0 : Math.max(0,Math.min(requestedClipStart,audioBuffer.duration-Number(loop.value))); fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
+    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart'));
+      clipStart = 0;
+      clipEnd = audioBuffer.duration;
+      if (loop.value !== '0' && Number.isFinite(Number(loop.value))) {
+        const len = Number(loop.value);
+        clipStart = (Number.isFinite(requestedClipStart) ? Math.max(0, Math.min(requestedClipStart, audioBuffer.duration - len)) : 0);
+        clipEnd = Math.min(audioBuffer.duration, clipStart + len);
+      } else if (Number.isFinite(requestedClipStart) && requestedClipStart > 0) {
+        clipStart = Math.max(0, Math.min(requestedClipStart, audioBuffer.duration - 0.05));
+      }
+      fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
 
     function updateTrialBanner() {
       if (!trialBanner) return;
@@ -587,7 +643,77 @@
       applySnapshot(historyStack[historyIndex]);
     }
     chooseButton.onclick=()=>audioFile.click(); audioFile.onchange=e=>load(e.target.files[0]); ['dragenter','dragover'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.add('drag')})); ['dragleave','drop'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.remove('drag')})); dropzone.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
-    [speed,reverb,bass,fadeIn,fadeOut,loop].forEach(input=>input.addEventListener('input',()=>{pushHistoryState(); saveLastSettings(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(Math.min(Math.max(currentOffset,clipStart),previewEnd()));})); if(keepPitch) keepPitch.addEventListener('change',()=>{pushHistoryState(); saveLastSettings(); if(source){stop(false); play();} }); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;if(btn.dataset.bass!=null)bass.value=btn.dataset.bass;loop.value=btn.dataset.loop;if(btn.dataset.fadeIn!=null)fadeIn.value=btn.dataset.fadeIn;if(btn.dataset.fadeOut!=null)fadeOut.value=btn.dataset.fadeOut;processMode=btn.dataset.mode||'normal';if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));pushHistoryState(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event){const rect=canvas.getBoundingClientRect();return Math.max(0,Math.min(audioBuffer.duration,(event.clientX-rect.left)/rect.width*audioBuffer.duration));} canvas.onpointerdown=event=>{if(!audioBuffer)return;const point=pointAt(event);const threshold=audioBuffer.duration*.025;if(Math.abs(point-clipStart)<threshold)dragHandle='start';else if(Math.abs(point-previewEnd())<threshold)dragHandle='end';else{if(loop.value==='0'){clipStart=Math.min(point,audioBuffer.duration-15);refreshClipStart();setPosition(clipStart);}else{clipStart=Math.min(point,audioBuffer.duration-clipLength());refreshClipStart();setPosition(clipStart);}return;}canvas.setPointerCapture(event.pointerId);}; canvas.onpointermove=event=>{if(!dragHandle||!audioBuffer)return;const point=pointAt(event);if(dragHandle==='start'){clipStart=Math.max(0,Math.min(point,audioBuffer.duration-clipLength()));refreshClipStart();setPosition(clipStart);}else{const nextLength=Math.max(0.25,Math.min(audioBuffer.duration-clipStart,Math.abs(point-clipStart)));const roundedLength=Math.max(15,Math.round(nextLength/15)*15);loop.value=String(Math.min(60,roundedLength));updateLabels();refreshClipStart();setPosition(clipStart);}pushHistoryState();}; canvas.onpointerup=event=>{if(!audioBuffer)return;dragHandle=null;canvas.releasePointerCapture(event.pointerId);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;};     setClipStart.onclick=()=>{if(!audioBuffer||loop.value==='0')return;clipStart=currentOffset;refreshClipStart();setPosition(clipStart);notice.textContent=`Clip will export from ${formatTime(clipStart)} to ${formatTime(previewEnd())}.`;}; resetClip.onclick=()=>{if(!audioBuffer) return; clipStart=0; loop.value='0'; updateLabels(); refreshClipStart(); setPosition(clipStart); notice.textContent='Clip selection reset to full audio.';}; zoomIn.onclick=()=>adjustZoom('in'); zoomOut.onclick=()=>adjustZoom('out'); undoPreset.onclick=()=>restoreHistory('undo'); redoPreset.onclick=()=>restoreHistory('redo'); document.addEventListener('keydown', event => {      const isTyping = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+    [speed,reverb,bass,fadeIn,fadeOut,loop].forEach(input=>input.addEventListener('input',()=>{
+      if (input === loop && audioBuffer) {
+        if (loop.value === '0') { clipStart = 0; clipEnd = audioBuffer.duration; }
+        else {
+          const len = Number(loop.value);
+          if (clipStart + len > audioBuffer.duration) clipStart = Math.max(0, audioBuffer.duration - len);
+          clipEnd = Math.min(audioBuffer.duration, clipStart + len);
+        }
+      }
+      pushHistoryState(); saveLastSettings(); updateLabels(); refreshClipStart();
+      if (audioBuffer) setPosition(Math.min(Math.max(currentOffset, clipStart), previewEnd()));
+    })); if(keepPitch) keepPitch.addEventListener('change',()=>{pushHistoryState(); saveLastSettings(); if(source){stop(false); play();} }); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;if(btn.dataset.bass!=null)bass.value=btn.dataset.bass;loop.value=btn.dataset.loop;if(btn.dataset.fadeIn!=null)fadeIn.value=btn.dataset.fadeIn;if(btn.dataset.fadeOut!=null)fadeOut.value=btn.dataset.fadeOut;processMode=btn.dataset.mode||'normal';if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));pushHistoryState(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event) {
+      const rect = canvas.getBoundingClientRect();
+      return Math.max(0, Math.min(audioBuffer.duration, (event.clientX - rect.left) / rect.width * audioBuffer.duration));
+    }
+    function handleThreshold() {
+      const rect = canvas.getBoundingClientRect();
+      return Math.max(0.05, audioBuffer.duration * (12 / Math.max(1, rect.width)));
+    }
+    canvas.style.touchAction = 'none';
+    canvas.onpointerdown = event => {
+      if (!audioBuffer) return;
+      event.preventDefault();
+      const point = pointAt(event);
+      const th = handleThreshold();
+      const distStart = Math.abs(point - clipStart);
+      const distEnd = Math.abs(point - previewEnd());
+      if (distStart <= th || distEnd <= th) {
+        dragHandle = distStart <= distEnd ? 'start' : 'end';
+      } else if (point >= clipStart && point <= previewEnd()) {
+        if (source) stop(false);
+        setPosition(point);
+        dragHandle = null;
+        return;
+      } else {
+        dragHandle = (point < clipStart) ? 'start' : 'end';
+      }
+      canvas.setPointerCapture(event.pointerId);
+      canvas.style.cursor = 'ew-resize';
+    };
+    canvas.onpointermove = event => {
+      if (!audioBuffer) return;
+      if (!dragHandle) {
+        const point = pointAt(event);
+        const th = handleThreshold();
+        canvas.style.cursor = (Math.abs(point - clipStart) <= th || Math.abs(point - previewEnd()) <= th) ? 'ew-resize' : 'crosshair';
+        return;
+      }
+      const point = pointAt(event);
+      if (dragHandle === 'start') {
+        clipStart = Math.max(0, Math.min(point, previewEnd() - 0.05));
+      } else {
+        clipEnd = Math.max(clipStart + 0.05, Math.min(audioBuffer.duration, point));
+      }
+      refreshClipStart();
+      setPosition(dragHandle === 'start' ? clipStart : Math.min(Math.max(currentOffset, clipStart), previewEnd()));
+    };
+    canvas.onpointerup = event => {
+      if (!audioBuffer) return;
+      if (dragHandle) {
+        syncLoopFromRegion();
+        pushHistoryState();
+        saveLastSettings();
+        notice.textContent = `Clip: ${formatTime(clipStart)} → ${formatTime(previewEnd())} (${formatTime(clipLength())})`;
+      }
+      dragHandle = null;
+      try { canvas.releasePointerCapture(event.pointerId); } catch (_) {}
+      canvas.style.cursor = 'crosshair';
+    };
+    canvas.onpointercancel = canvas.onpointerup;
+    setClipStart.onclick=()=>{if(!audioBuffer)return;clipStart=Math.min(currentOffset, (clipEnd||audioBuffer.duration)-0.05);refreshClipStart();syncLoopFromRegion();setPosition(clipStart);notice.textContent=`Clip: ${formatTime(clipStart)} → ${formatTime(previewEnd())}`;}; resetClip.onclick=()=>{if(!audioBuffer) return; clipStart=0; clipEnd=audioBuffer.duration; loop.value='0'; updateLabels(); refreshClipStart(); setPosition(0); notice.textContent='Clip reset to full audio. Drag the pink handles on the waveform to trim.';}; zoomIn.onclick=()=>adjustZoom('in'); zoomOut.onclick=()=>adjustZoom('out'); undoPreset.onclick=()=>restoreHistory('undo'); redoPreset.onclick=()=>restoreHistory('redo'); document.addEventListener('keydown', event => {      const isTyping = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
       if ((event.code === 'Space' || event.key === ' ') && !isTyping) {
         event.preventDefault();
         if (audioBuffer) { if (source) stop(false); else play(); }
