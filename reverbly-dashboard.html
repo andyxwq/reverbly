@@ -85,7 +85,7 @@
         return;
       }
       if (!items || !items.length) {
-        list.innerHTML = '<p class="empty-history">Your exported versions will appear here after you export while signed in.</p>';
+        list.innerHTML = '<p class="empty-history">No exports yet. Open the editor, make a version, and export while signed in — it will show up here.</p><p class="empty-history" style="margin-top:12px"><a class="button" href="/reverbly-prototype" style="display:inline-flex">Open editor</a></p>';
         return;
       }
       for (const item of items) {
