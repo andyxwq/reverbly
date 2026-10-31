@@ -528,8 +528,8 @@
         if (window.reverblyTrack) window.reverblyTrack('export_blocked', { plan: currentPlan });
         return;
       }
-      updateProgress(20, 'Rendering WAV…');
-      notice.textContent = 'Rendering your WAV…';
+      updateProgress(20, 'Rendering audio…');
+      notice.textContent = 'Rendering your audio…';
       const rate = Number(speed.value), reverbAmt = Math.max(0, Math.min(1, Number(reverb.value)/100)), tailSec = reverbAmt > 0.02 ? (0.55 + reverbAmt * 3.6) * 0.9 : 0, length = Math.ceil((clipLength() / rate + tailSec) * audioBuffer.sampleRate);
       const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
       const src = graph(offline, offline.destination);
@@ -538,16 +538,31 @@
       updateProgress(70, 'Normalizing…');
       const rendered = (optNormalize && optNormalize.checked) ? normalizeBuffer(rendered0) : rendered0;
       updateProgress(85, 'Encoding WAV…');
-      const bytes = encodeWav(rendered), blob = new Blob([bytes], { type: 'audio/wav' }), link = document.createElement('a');
+            const formatEl = document.getElementById('exportFormat');
+      const format = (formatEl && formatEl.value) === 'mp3' ? 'mp3' : 'wav';
+      updateProgress(88, format === 'mp3' ? 'Encoding MP3…' : 'Encoding WAV…');
+      let blob;
+      if (format === 'mp3') {
+        try {
+          blob = await encodeMp3(rendered);
+        } catch (err) {
+          notice.textContent = 'MP3 encoder failed — exporting WAV instead.';
+          blob = new Blob([encodeWav(rendered)], { type: 'audio/wav' });
+        }
+      } else {
+        blob = new Blob([encodeWav(rendered)], { type: 'audio/wav' });
+      }
+      const ext = blob.type === 'audio/mpeg' ? 'mp3' : 'wav';
+      const link = document.createElement('a');
       const base = fileName.textContent.replace(/^✓\s*/,'').replace(/\.[^.]+$/,'') || 'audio';
       const tag = window.__reverblyBatchTag ? `-${window.__reverblyBatchTag}` : '';
       const brand = (optBrand && optBrand.checked) ? '-made-with-reverbly' : '';
-      const outputName = `reverbly-${base}${tag}${brand}.wav`;
+      const outputName = `reverbly-${base}${tag}${brand}.${ext}`;
       link.href = URL.createObjectURL(blob);
       link.download = outputName;
       link.click();
       URL.revokeObjectURL(link.href);
-      notice.textContent = quota.message || 'Your WAV download has started.';
+      notice.textContent = quota.message || ('Your ' + (document.getElementById('exportFormat')?.value === 'mp3' ? 'MP3' : 'WAV') + ' download has started.');
       updateProgress(100, 'Download ready');
       await saveExportHistory(blob, outputName);
       if (window.reverblyTrack) window.reverblyTrack('export_success', { plan: currentPlan, speed: Number(speed.value), reverb: Number(reverb.value) });
@@ -589,7 +604,7 @@
       const url = settingsUrl();
       try {
         await navigator.clipboard.writeText(url);
-        notice.textContent = 'Settings link copied. Anyone can open it and apply these controls.';
+        notice.textContent = 'Link copied — share it and the same speed, reverb, bass and length will load.';
       } catch {
         prompt('Copy this settings link:', url);
       }
@@ -618,7 +633,7 @@
       }
       window.__reverblyBatchTag = '';
       batchExport.disabled = false;
-      notice.textContent = 'Batch complete: 3 WAV downloads started.';
+      notice.textContent = 'Batch complete: 3 downloads started.';
       if (window.reverblyTrack) window.reverblyTrack('batch_export', { count: 3 });
     };
     if (historySettings.get('mode')) processMode = historySettings.get('mode');
