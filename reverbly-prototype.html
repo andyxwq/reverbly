@@ -96,6 +96,11 @@
     .export:disabled,.play:disabled { opacity:.5; cursor:not-allowed; }
     .notice { min-height:22px; margin:13px 0 0; text-align:center; color:var(--muted); font-size:13px; }
     .legal { margin:27px auto 0; max-width:700px; color:#998eae; font-size:12px; text-align:center; }
+    .coach { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 14px; padding:12px 14px; border:1px solid #6a5490; border-radius:14px; background:#241b38; font-size:14px; }
+    .coach[hidden] { display:none; }
+    .coach strong { color:#ffc3e5; }
+    .coach span { color:#e6def8; flex:1; min-width:180px; }
+    .coach button { border:0; border-radius:9px; padding:8px 12px; font-weight:700; color:#1b102a; background:var(--green); cursor:pointer; }
     
     .trial-banner { display:none; margin:0 0 18px; padding:12px 14px; border-radius:12px; border:1px solid #6a5490; background:#2a2040; color:#e6def8; font-size:14px; }
     .trial-banner.show { display:block; }
@@ -168,6 +173,11 @@
       <button type="button" data-step="2"><span class="n">Step 2</span>Version</button>
       <button type="button" data-step="3"><span class="n">Step 3</span>Export</button>
     </nav>
+    <div id="coach" class="coach" hidden>
+      <strong>First time?</strong>
+      <span>1. Drop your audio. 2. Keep Slowed + reverb, or pick another version. 3. Export. The file name includes the preset.</span>
+      <button id="coachDismiss" type="button">Got it</button>
+    </div>
     <section class="workspace" id="workspace" data-step="1" aria-label="Audio editor">
       <div class="editor-column">
       <section class="panel upload-panel">
@@ -256,8 +266,17 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="reverbly-supabase-config.js"></script>
   <script>
-    const audioFile = document.getElementById('audioFile'), dropzone = document.getElementById('dropzone');
+    const coach = document.getElementById('coach');
+    const coachDismiss = document.getElementById('coachDismiss');
+    try {
+      if (coach && !localStorage.getItem('reverbly-coach')) coach.hidden = false;
+    } catch (_) {}
+    if (coachDismiss) coachDismiss.onclick = () => {
+      coach.hidden = true;
+      try { localStorage.setItem('reverbly-coach', '1'); } catch (_) {}
+    };
     const chooseButton = document.getElementById('chooseButton'), fileName = document.getElementById('fileName');
+    const audioFile = document.getElementById('audioFile'), dropzone = document.getElementById('dropzone');
     const speed = document.getElementById('speed'), reverb = document.getElementById('reverb'), bass = document.getElementById('bass'), keepPitch = document.getElementById('keepPitch'), fadeIn = document.getElementById('fadeIn'), fadeOut = document.getElementById('fadeOut'), loop = document.getElementById('loop');
     const speedValue = document.getElementById('speedValue'), reverbValue = document.getElementById('reverbValue'), bassValue = document.getElementById('bassValue'), fadeInValue = document.getElementById('fadeInValue'), fadeOutValue = document.getElementById('fadeOutValue'), loopValue = document.getElementById('loopValue');
     const playButton = document.getElementById('playButton'), stopButton = document.getElementById('stopButton'), exportButton = document.getElementById('exportButton'), abButton = document.getElementById('abButton');
