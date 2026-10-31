@@ -3,38 +3,47 @@ export default {
     const url = new URL(request.url);
     let path = url.pathname;
 
-    // Normalize trailing slash (except root)
     if (path.length > 1 && path.endsWith('/')) {
       path = path.slice(0, -1);
     }
 
-    // Homepage
     if (path === '/' || path === '') {
       return env.ASSETS.fetch(new URL('/index.html', url.origin));
     }
 
-    // Pretty routes: /reverbly-prototype → reverbly-prototype.html
-    // Try HTML first so we don't depend on a 404 from assets.
-    if (!path.includes('.')) {
-      const htmlUrl = new URL(path + '.html', url.origin);
-      htmlUrl.search = url.search;
-      const htmlResponse = await env.ASSETS.fetch(new Request(htmlUrl.toString(), request));
-      if (htmlResponse.status === 200) {
-        return htmlResponse;
-      }
+    // Files with extension: serve directly
+    if (path.includes('.')) {
+      return env.ASSETS.fetch(new URL(path + url.search, url.origin));
     }
 
-    // Direct file (css, js, png, or explicit .html)
-    const assetUrl = new URL(path, url.origin);
-    assetUrl.search = url.search;
-    const response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request));
-    if (response.status !== 404) return response;
+    // Pretty URL → .html (primary)
+    const htmlUrl = new URL(path + '.html' + url.search, url.origin);
+    let response = await env.ASSETS.fetch(htmlUrl);
 
-    // Fallback: SPA-style soft landing on homepage for unknown pages
-    if (!path.includes('.')) {
-      return env.ASSETS.fetch(new URL('/index.html', url.origin));
+    // Brief retry if asset graph still settling after deploy
+    if (response.status === 404) {
+      response = await env.ASSETS.fetch(htmlUrl);
     }
 
-    return response;
+    if (response.status === 200) {
+      return response;
+    }
+
+    // Explicit 404 page (do not silently send people home)
+    const notFound = await env.ASSETS.fetch(new URL('/404.html', url.origin));
+    if (notFound.status === 200) {
+      return new Response(await notFound.arrayBuffer(), {
+        status: 404,
+        headers: {
+          'content-type': notFound.headers.get('content-type') || 'text/html; charset=utf-8',
+          'cache-control': 'no-store'
+        }
+      });
+    }
+
+    return new Response('Not found', {
+      status: 404,
+      headers: { 'content-type': 'text/plain; charset=utf-8' }
+    });
   }
 };
