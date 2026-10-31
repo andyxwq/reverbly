@@ -607,6 +607,7 @@
       const rendered0 = await offline.startRendering();
       updateProgress(70, 'Normalizing…');
       let rendered = (optNormalize && optNormalize.checked) ? normalizeBuffer(rendered0) : rendered0;
+      rendered = softLimitBuffer(rendered);
       if (optSeamless && optSeamless.checked) rendered = applySeamlessLoop(rendered);
       updateProgress(85, 'Encoding WAV…');
             const formatEl = document.getElementById('exportFormat');
@@ -638,6 +639,20 @@
       await saveExportHistory(blob, outputName);
       if (window.reverblyTrack) window.reverblyTrack('export_success', { plan: currentPlan, speed: Number(speed.value), reverb: Number(reverb.value) });
       exportButton.disabled = false;
+    }
+    function softLimitBuffer(buffer, threshold = 0.95) {
+      const out = new AudioBuffer({ length: buffer.length, numberOfChannels: buffer.numberOfChannels, sampleRate: buffer.sampleRate });
+      for (let c = 0; c < buffer.numberOfChannels; c++) {
+        const input = buffer.getChannelData(c);
+        const data = out.getChannelData(c);
+        for (let i = 0; i < input.length; i++) {
+          const x = input[i];
+          const ax = Math.abs(x);
+          if (ax <= threshold) data[i] = x;
+          else data[i] = Math.sign(x) * (threshold + (ax - threshold) / (1 + (ax - threshold) * 3));
+        }
+      }
+      return out;
     }
     function applySeamlessLoop(buffer) {
       const fade = Math.min(0.12, buffer.duration * 0.15);
