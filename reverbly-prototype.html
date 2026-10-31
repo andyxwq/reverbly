@@ -328,7 +328,7 @@
     async function saveExportHistory(blob, outputName) { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) return; const originalName=fileName.textContent.replace(/^✓\s*/,'') || 'audio'; const activePreset=document.querySelector('.preset.active'); const preset=activePreset ? activePreset.childNodes[0].textContent.trim() : 'Custom'; const path=`${session.user.id}/${crypto.randomUUID()}.wav`; const {error:uploadError}=await reverblyAuth.storage.from('exports').upload(path,blob,{contentType:'audio/wav',upsert:false}); const {error}=await reverblyAuth.from('exports').insert({user_id:session.user.id,original_name:originalName,output_name:outputName,preset,speed:Number(speed.value),reverb:Number(reverb.value),loop_seconds:Number(loop.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),clip_start_seconds:clipStart,storage_path:uploadError ? null : path}); if(uploadError) console.warn('Export file was not stored.',uploadError.message); if(error) { console.warn('Export history was not saved.',error.message); notice.textContent=(notice.textContent||'')+' History save failed — download still worked.'; } }
     function applySavedPreset(preset) { stop(); speed.value=preset.speed; reverb.value=preset.reverb; fadeIn.value=preset.fade_in; fadeOut.value=preset.fade_out; loop.value=preset.loop_seconds; if(audioBuffer) { clipStart=0; refreshClipStart(); setPosition(clipStart); } updateLabels(); notice.textContent=`"${preset.name}" is ready to preview.`; pushHistoryState(); }
     function renderSavedPresets(message) { savedPresetList.replaceChildren(); if(message) { const text=document.createElement('small'); text.textContent=message; savedPresetList.append(text); return; } savedPresets.forEach(preset=>{ const row=document.createElement('div'), use=document.createElement('button'), remove=document.createElement('button'); row.className='saved-item'; use.type='button'; use.textContent=preset.name; use.title=`${Number(preset.speed).toFixed(2)}x, ${preset.reverb}% reverb`; use.onclick=()=>applySavedPreset(preset); remove.type='button'; remove.textContent='×'; remove.title=`Delete ${preset.name}`; remove.setAttribute('aria-label',`Delete ${preset.name}`); remove.onclick=()=>deleteSavedPreset(preset.id); row.append(use,remove); savedPresetList.append(row); }); }
-    async function loadSavedPresets() { const planPill=document.getElementById('planPill'); const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { currentPlan='free'; trialEndsAt=null; updateTrialBanner(); if(planPill){planPill.hidden=false;planPill.textContent='Free';} renderSavedPresets('Sign in with Pro or Trial to save presets.'); return; } const {data:profile}=await reverblyAuth.from('profiles').select('plan').eq('id',session.user.id).maybeSingle(); currentPlan=profile?.plan || 'free'; if(planPill){planPill.hidden=false;planPill.textContent=currentPlan==='trialing'?'Trial':currentPlan==='pro'?'Pro':'Free';}
+    async function loadSavedPresets() { const planPill=document.getElementById('planPill'); const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { currentPlan='free'; trialEndsAt=null; updateTrialBanner(); if(planPill){planPill.hidden=false;planPill.textContent='Free';} renderSavedPresets('Sign in with Pro or Trial to save presets.'); return; } const {data:profile}=await reverblyAuth.from('profiles').select('plan').eq('id',session.user.id).maybeSingle(); currentPlan=profile?.plan || 'free'; if(planPill){planPill.hidden=false;planPill.textContent=currentPlan==='trialing'?'Trial':currentPlan==='pro'?'Pro':currentPlan==='plus'?'Plus':'Free';}
       const {data:sub}=await reverblyAuth.from('subscriptions').select('trial_ends_at,status').eq('user_id',session.user.id).maybeSingle();
       trialEndsAt = sub?.trial_ends_at || null;
       updateTrialBanner(); if(!canSavePresets()) { renderSavedPresets('Available with Reverbly Pro or Trial.'); return; } const {data,error}=await reverblyAuth.from('saved_presets').select('id,name,speed,reverb,fade_in,fade_out,loop_seconds').order('created_at',{ascending:false}); savedPresets=data || []; renderSavedPresets(error ? 'Could not load presets yet. Run the saved-presets SQL migration.' : savedPresets.length ? '' : 'Save your first custom preset.'); }
@@ -599,7 +599,7 @@
         return;
       }
       updateProgress(20, 'Rendering audio…');
-      notice.textContent = 'Rendering ' + formatTime(clipStart) + ' → ' + formatTime(previewEnd()) + '…';
+      notice.textContent = 'Rendering ' + formatTime(clipStart) + ' → ' + formatTime(previewEnd()) + (optSeamless && optSeamless.checked ? ' (seamless)' : '') + '…';
       const rate = Number(speed.value), reverbAmt = Math.max(0, Math.min(1, Number(reverb.value)/100)), tailSec = reverbAmt > 0.02 ? (0.55 + reverbAmt * 3.6) * 0.9 : 0, length = Math.ceil((clipLength() / rate + tailSec) * audioBuffer.sampleRate);
       const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
       const src = graph(offline, offline.destination);
@@ -757,6 +757,10 @@
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !isTyping) {
         event.preventDefault();
         if (event.shiftKey) restoreHistory('redo'); else restoreHistory('undo');
+      }
+      if (!isTyping && (event.key === 'b' || event.key === 'B') && audioBuffer && abButton && !abButton.disabled) {
+        event.preventDefault();
+        abButton.click();
       }
     });
     playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=exportWav;
