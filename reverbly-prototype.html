@@ -258,6 +258,10 @@
           <button id="shareSettings" class="secondary" type="button">Copy settings link</button>
           <button id="batchExport" class="secondary" type="button">Export 3 versions</button>
         </div>
+        <div id="cloudBox" class="saved-presets" style="margin-top:14px">
+          <div class="saved-presets-head"><h3>Your cloud</h3><small id="cloudHint">Sign in to keep exports</small></div>
+          <div id="cloudList" class="saved-list"></div>
+        </div>
         <div id="upsellBox" class="upsell" role="status"></div>
         <button id="exportButton" class="export" type="button" disabled>Export WAV</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
       </section>
@@ -360,7 +364,7 @@
         if (s.loop != null) loop.value = s.loop;
       } catch (_) {}
     }
-    async function saveExportHistory(blob, outputName) { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) return; const originalName=fileName.textContent.replace(/^✓\s*/,'') || 'audio'; const activePreset=document.querySelector('.preset.active'); const preset=activePreset ? activePreset.childNodes[0].textContent.trim() : 'Custom'; const path=`${session.user.id}/${crypto.randomUUID()}.wav`; const {error:uploadError}=await reverblyAuth.storage.from('exports').upload(path,blob,{contentType:'audio/wav',upsert:false}); const {error}=await reverblyAuth.from('exports').insert({user_id:session.user.id,original_name:originalName,output_name:outputName,preset,speed:Number(speed.value),reverb:Number(reverb.value),loop_seconds:Number(loop.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),clip_start_seconds:clipStart,storage_path:uploadError ? null : path}); if(uploadError) console.warn('Export file was not stored.',uploadError.message); if(error) { console.warn('Export history was not saved.',error.message); notice.textContent=(notice.textContent||'')+' History save failed — download still worked.'; } }
+    async function saveExportHistory(blob, outputName) { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) return { stored:false, signedIn:false }; const originalName=fileName.textContent.replace(/^✓\s*/,'') || 'audio'; const activePreset=document.querySelector('.preset.active'); const preset=activePreset ? activePreset.childNodes[0].textContent.trim() : 'Custom'; const cloudExt = blob.type === 'audio/mpeg' ? 'mp3' : 'wav'; const cloudType = cloudExt === 'mp3' ? 'audio/mpeg' : 'audio/wav'; const path=`${session.user.id}/${crypto.randomUUID()}.${cloudExt}`; const {error:uploadError}=await reverblyAuth.storage.from('exports').upload(path,blob,{contentType:cloudType,upsert:false}); const {error}=await reverblyAuth.from('exports').insert({user_id:session.user.id,original_name:originalName,output_name:outputName,preset,speed:Number(speed.value),reverb:Number(reverb.value),loop_seconds:Number(loop.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),clip_start_seconds:clipStart,storage_path:uploadError ? null : path}); if(uploadError) console.warn('Export file was not stored.',uploadError.message); if(error) { console.warn('Export history was not saved.',error.message); notice.textContent=(notice.textContent||'')+' History save failed — download still worked.'; } return { stored: !uploadError && !error, signedIn: true }; }
     function applySavedPreset(preset) { stop(); speed.value=preset.speed; reverb.value=preset.reverb; fadeIn.value=preset.fade_in; fadeOut.value=preset.fade_out; loop.value=preset.loop_seconds; if(audioBuffer) { clipStart=0; refreshClipStart(); setPosition(clipStart); } updateLabels(); notice.textContent=`"${preset.name}" is ready to preview.`; pushHistoryState(); }
     function renderSavedPresets(message) { savedPresetList.replaceChildren(); if(message) { const text=document.createElement('small'); text.textContent=message; savedPresetList.append(text); return; } savedPresets.forEach(preset=>{ const row=document.createElement('div'), use=document.createElement('button'), remove=document.createElement('button'); row.className='saved-item'; use.type='button'; use.textContent=preset.name; use.title=`${Number(preset.speed).toFixed(2)}x, ${preset.reverb}% reverb`; use.onclick=()=>applySavedPreset(preset); remove.type='button'; remove.textContent='×'; remove.title=`Delete ${preset.name}`; remove.setAttribute('aria-label',`Delete ${preset.name}`); remove.onclick=()=>deleteSavedPreset(preset.id); row.append(use,remove); savedPresetList.append(row); }); }
     async function loadSavedPresets() { const planPill=document.getElementById('planPill'); const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { currentPlan='free'; trialEndsAt=null; updateTrialBanner(); if(planPill){planPill.hidden=false;planPill.textContent='Free';} renderSavedPresets('Sign in with Pro or Trial to save presets.'); return; } const {data:profile}=await reverblyAuth.from('profiles').select('plan').eq('id',session.user.id).maybeSingle(); currentPlan=profile?.plan || 'free'; if(planPill){planPill.hidden=false;planPill.textContent=currentPlan==='trialing'?'Trial':currentPlan==='pro'?'Pro':currentPlan==='plus'?'Plus':'Free';}
@@ -668,7 +672,13 @@
       setTimeout(function () { URL.revokeObjectURL(link.href); }, 4000);
       notice.textContent = (quota.message ? quota.message + ' ' : '') + 'Ready for TikTok, Reels and Shorts. File: ' + outputName;
       updateProgress(100, 'Download ready');
-      await saveExportHistory(blob, outputName);
+      const cloudSave = await saveExportHistory(blob, outputName);
+      if (cloudSave && cloudSave.stored) {
+        notice.textContent += ' Saved to your cloud.';
+        if (typeof loadCloudCopies === 'function') loadCloudCopies();
+      } else if (!cloudSave || !cloudSave.signedIn) {
+        notice.textContent += ' Sign in to keep a copy in your account.';
+      }
       if (window.reverblyTrack) window.reverblyTrack('export_success', { plan: currentPlan, speed: Number(speed.value), reverb: Number(reverb.value) });
       exportButton.disabled = false;
     }
@@ -989,8 +999,49 @@
       notice.textContent = 'Batch complete: 3 downloads started.';
       if (window.reverblyTrack) window.reverblyTrack('batch_export', { count: 3 });
     };
+    async function loadCloudCopies() {
+      const list = document.getElementById('cloudList');
+      const hint = document.getElementById('cloudHint');
+      if (!list || !reverblyAuth) return;
+      const { data: { session } } = await reverblyAuth.auth.getSession();
+      if (!session) {
+        if (hint) hint.textContent = 'Sign in to keep exports';
+        list.innerHTML = '<p class="muted">Exports stay on this device until you sign in.</p>';
+        return;
+      }
+      if (hint) hint.textContent = 'Private to your account';
+      const { data, error } = await reverblyAuth.from('exports').select('output_name,storage_path,created_at').order('created_at', { ascending: false }).limit(5);
+      list.replaceChildren();
+      if (error || !data || !data.length) {
+        list.innerHTML = '<p class="muted">No cloud copies yet. Export while signed in.</p>';
+        return;
+      }
+      for (const item of data) {
+        const row = document.createElement('div');
+        row.className = 'saved-item';
+        const label = document.createElement('span');
+        label.textContent = item.output_name;
+        label.style.flex = '1';
+        label.style.fontSize = '13px';
+        row.append(label);
+        if (item.storage_path) {
+          const { data: signed } = await reverblyAuth.storage.from('exports').createSignedUrl(item.storage_path, 300);
+          if (signed && signed.signedUrl) {
+            const link = document.createElement('a');
+            link.href = signed.signedUrl;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.textContent = 'Open';
+            link.style.color = '#cdbbff';
+            link.style.fontSize = '13px';
+            row.append(link);
+          }
+        }
+        list.append(row);
+      }
+    }
     if (historySettings.get('mode')) processMode = historySettings.get('mode');
-    pushHistoryState(); applyHistorySettings(); loadLastSettings(); updateLabels(); loadSavedPresets();
+    pushHistoryState(); applyHistorySettings(); loadLastSettings(); updateLabels(); loadSavedPresets(); loadCloudCopies();
     (function () {
       var fmt = document.getElementById('exportFormat');
       var exportBtn = document.getElementById('exportButton');
