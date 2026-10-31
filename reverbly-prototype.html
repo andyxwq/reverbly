@@ -196,14 +196,14 @@
       <section class="panel presets-panel">
         <h2>2. Choose a version</h2><p class="muted">Start with a preset or use one you saved.</p>
         <div class="presets" role="group" aria-label="Audio presets">
-          <button class="preset active" type="button" data-speed="0.82" data-reverb="62" data-bass="6" data-loop="0" data-fade-in="0.25" data-fade-out="0.55">Slowed + reverb<span>0.82× • atmospheric</span></button>
-          <button class="preset" type="button" data-speed="1.18" data-reverb="0" data-bass="2" data-loop="0">Nightcore / sped up<span>1.18× • energetic</span></button>
-          <button class="preset" type="button" data-speed="0.75" data-reverb="72" data-bass="8" data-loop="0" data-fade-in="0.4" data-fade-out="0.8">Daycore / lo-fi<span>0.75× • dreamy</span></button>
-          <button class="preset" type="button" data-speed="1.05" data-reverb="28" data-bass="3" data-loop="8">Reel hook 8s<span>tight opening</span></button>
-          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="15">15 sec hook<span>your strongest opening</span></button>
-          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="30">30 sec clip<span>ready for Shorts</span></button>
-          <button class="preset" type="button" data-speed="0.9" data-reverb="45" data-loop="0" data-mode="vibe">Vibe room<span>soft low + reverb</span></button>
-          <button class="preset" type="button" data-speed="1" data-reverb="12" data-loop="0" data-mode="vocal">Vocal forward<span>clearer presence</span></button>
+          <button class="preset active" type="button" data-speed="0.82" data-reverb="62" data-bass="6" data-loop="0" data-fade-in="0.25" data-fade-out="0.55" data-slug="slowed">Slowed + reverb<span>0.82× • atmospheric</span></button>
+          <button class="preset" type="button" data-speed="1.18" data-reverb="0" data-bass="2" data-loop="0" data-slug="sped">Nightcore / sped up<span>1.18× • energetic</span></button>
+          <button class="preset" type="button" data-speed="0.75" data-reverb="72" data-bass="8" data-loop="0" data-fade-in="0.4" data-fade-out="0.8" data-slug="daycore">Daycore / lo-fi<span>0.75× • dreamy</span></button>
+          <button class="preset" type="button" data-speed="1.05" data-reverb="28" data-bass="3" data-loop="8" data-slug="hook8">Reel hook 8s<span>tight opening</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="15" data-slug="hook15">15 sec hook<span>your strongest opening</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="30" data-slug="clip30">30 sec clip<span>ready for Shorts</span></button>
+          <button class="preset" type="button" data-speed="0.9" data-reverb="45" data-loop="0" data-mode="vibe" data-slug="vibe">Vibe room<span>soft low + reverb</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="12" data-loop="0" data-mode="vocal" data-slug="vocal">Vocal forward<span>clearer presence</span></button>
         </div>
         <section class="saved-presets" aria-labelledby="savedPresetsTitle">
           <div class="saved-presets-head"><h3 id="savedPresetsTitle">Your saved presets</h3><small>Pro and Trial</small></div>
@@ -626,10 +626,7 @@
       }
       const ext = blob.type === 'audio/mpeg' ? 'mp3' : 'wav';
       const link = document.createElement('a');
-      const base = fileName.textContent.replace(/^✓\s*/,'').replace(/\.[^.]+$/,'') || 'audio';
-      const tag = window.__reverblyBatchTag ? `-${window.__reverblyBatchTag}` : '';
-      const brand = (optBrand && optBrand.checked) ? '-made-with-reverbly' : '';
-      const outputName = `reverbly-${base}${tag}${brand}.${ext}`;
+      const outputName = buildExportFilename(ext);
       link.href = URL.createObjectURL(blob);
       link.download = outputName;
       link.click();
@@ -672,6 +669,37 @@
         }
       }
       return out;
+    }
+    function sanitizeFileBase(name) {
+      return String(name || 'audio')
+        .replace(/^✓\s*/, '')
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9._\-\s]+/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .slice(0, 60) || 'audio';
+    }
+    function exportStyleSlug() {
+      if (window.__reverblyBatchTag) return String(window.__reverblyBatchTag);
+      const active = document.querySelector('.preset.active');
+      if (active && active.dataset.slug) return active.dataset.slug;
+      const rate = Number(speed && speed.value);
+      const rev = Number(reverb && reverb.value);
+      if (rate < 0.95 && rev >= 20) return 'slowed';
+      if (rate > 1.08) return 'sped';
+      if (rate < 0.85) return 'daycore';
+      if (Number(loop && loop.value) === 15) return 'hook15';
+      if (Number(loop && loop.value) === 30) return 'clip30';
+      if (Number(loop && loop.value) === 8) return 'hook8';
+      if (typeof processMode !== 'undefined' && processMode === 'vibe') return 'vibe';
+      if (typeof processMode !== 'undefined' && processMode === 'vocal') return 'vocal';
+      return 'custom';
+    }
+    function buildExportFilename(ext) {
+      const base = sanitizeFileBase(fileName.textContent);
+      const style = exportStyleSlug();
+      const brand = (optBrand && optBrand.checked) ? '-made-with-reverbly' : '';
+      return base + '-reverbly-' + style + brand + '.' + ext;
     }
     function encodeWav(buffer) { const channels=buffer.numberOfChannels, length=buffer.length*channels*2, ab=new ArrayBuffer(44+length), v=new DataView(ab); const put=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}; put(0,'RIFF');v.setUint32(4,36+length,true);put(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*channels*2,true);v.setUint16(32,channels*2,true);v.setUint16(34,16,true);put(36,'data');v.setUint32(40,length,true);let offset=44;for(let i=0;i<buffer.length;i++)for(let c=0;c<channels;c++){const s=Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]));v.setInt16(offset,s<0?s*0x8000:s*0x7fff,true);offset+=2;}return ab; }
     function adjustZoom(direction) {
