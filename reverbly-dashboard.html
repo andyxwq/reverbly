@@ -110,6 +110,8 @@
           if (data && data.signedUrl) {
             const download = document.createElement('a');
             download.href = data.signedUrl;
+            download.target = '_blank';
+            download.rel = 'noopener';
             download.textContent = 'Download';
             download.download = item.output_name;
             actions.prepend(download);
