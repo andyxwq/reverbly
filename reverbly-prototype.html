@@ -43,7 +43,7 @@
     .panel { background:linear-gradient(145deg,#1d1630e8,#130f20e8); border:1px solid var(--line); border-radius:20px; padding:24px; box-shadow:0 18px 45px #0000002b; }
     .panel h2 { margin:0 0 6px; font-size:18px; letter-spacing:-.3px; }
     .muted { color:var(--muted); font-size:14px; }
-    .dropzone { display:grid; place-items:center; min-height:168px; margin-top:18px; border:1.5px dashed #7860a5; border-radius:15px; padding:18px; text-align:center; background:linear-gradient(145deg,#251c3a,#171224); transition:.2s; }
+    .dropzone { display:grid; place-items:center; min-height:210px; margin-top:18px; border:1.5px dashed #7860a5; border-radius:15px; padding:22px; text-align:center; background:linear-gradient(145deg,#251c3a,#171224); transition:.2s; }
     .dropzone.drag { border-color:var(--pink); background:#32203e; transform:translateY(-2px); }
     .dropzone strong { display:block; margin:12px 0 5px; font-size:17px; }
     .upload-icon { font-size:34px; color:var(--pink); }
@@ -182,7 +182,7 @@
       <div class="editor-column">
       <section class="panel upload-panel">
         <h2>1. Upload your audio</h2><p class="muted">MP3, WAV, M4A or other browser-supported audio files.</p>
-        <div id="dropzone" class="dropzone"><div><div class="upload-icon">↥</div><strong>Drop an audio file here</strong><span class="muted">or select a file from your device</span><br><button id="chooseButton" class="choose" type="button">Choose audio</button><div id="fileName" class="file-name" aria-live="polite"></div></div></div>
+        <div id="dropzone" class="dropzone"><div><div class="upload-icon">↥</div><strong>Drop your audio here</strong><span class="muted">MP3, WAV or M4A — or paste a file</span><br><button id="chooseButton" class="choose" type="button">Choose audio</button><div id="fileName" class="file-name" aria-live="polite"></div></div></div>
         <input id="audioFile" type="file" accept="audio/*" hidden>
         <div style="margin-top:14px">
           <label for="audioUrl" class="muted" style="display:block;margin-bottom:6px;font-size:13px">Direct audio link (a file you host: MP3, WAV, M4A)</label>
@@ -244,6 +244,12 @@
           <span id="exportProgressText" class="progress-label">Waiting for file</span>
         </div>
         
+        <div class="opt"><label for="exportFormat">Download format
+          <select id="exportFormat" style="margin-left:8px;border:1px solid #4a3e63;border-radius:8px;background:#211932;color:#f6f3ff;padding:6px 8px">
+            <option value="wav">WAV</option>
+            <option value="mp3">MP3</option>
+          </select>
+        </label></div>
         <div class="opt"><label><input id="optNormalize" type="checkbox" checked> Normalize loudness on export</label></div>
         <div class="opt"><label><input id="optTrim" type="checkbox"> Auto-trim silence at edges</label></div>
         <div class="opt"><label><input id="optSeamless" type="checkbox"> Seamless loop (crossfade edges)</label></div>
@@ -263,6 +269,7 @@
       <button type="button" class="export" id="stickyExportBtn" disabled>Export WAV</button>
     </div>
 </main>
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="reverbly-supabase-config.js"></script>
   <script>
@@ -658,7 +665,7 @@
       link.href = URL.createObjectURL(blob);
       link.download = outputName;
       link.click();
-      URL.revokeObjectURL(link.href);
+      setTimeout(function () { URL.revokeObjectURL(link.href); }, 4000);
       notice.textContent = (quota.message ? quota.message + ' ' : '') + 'Ready for TikTok, Reels and Shorts. File: ' + outputName;
       updateProgress(100, 'Download ready');
       await saveExportHistory(blob, outputName);
@@ -728,6 +735,34 @@
       const style = exportStyleSlug();
       const brand = (optBrand && optBrand.checked) ? '-made-with-reverbly' : '';
       return base + '-reverbly-' + style + brand + '.' + ext;
+    }
+    function floatTo16(channel) {
+      const out = new Int16Array(channel.length);
+      for (let i = 0; i < channel.length; i++) {
+        const s = Math.max(-1, Math.min(1, channel[i]));
+        out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+      }
+      return out;
+    }
+    async function encodeMp3(buffer) {
+      if (!window.lamejs || !window.lamejs.Mp3Encoder) throw new Error('mp3 encoder missing');
+      const channels = buffer.numberOfChannels > 1 ? 2 : 1;
+      const rate = buffer.sampleRate;
+      const encoder = new window.lamejs.Mp3Encoder(channels, rate, 192);
+      const left = floatTo16(buffer.getChannelData(0));
+      const right = channels > 1 ? floatTo16(buffer.getChannelData(1)) : left;
+      const block = 1152;
+      const parts = [];
+      for (let i = 0; i < left.length; i += block) {
+        const l = left.subarray(i, i + block);
+        const r = right.subarray(i, i + block);
+        const chunk = channels > 1 ? encoder.encodeBuffer(l, r) : encoder.encodeBuffer(l);
+        if (chunk && chunk.length) parts.push(chunk);
+      }
+      const end = encoder.flush();
+      if (end && end.length) parts.push(end);
+      if (!parts.length) throw new Error('empty mp3');
+      return new Blob(parts, { type: 'audio/mpeg' });
     }
     function encodeWav(buffer) { const channels=buffer.numberOfChannels, length=buffer.length*channels*2, ab=new ArrayBuffer(44+length), v=new DataView(ab); const put=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}; put(0,'RIFF');v.setUint32(4,36+length,true);put(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels,true);v.setUint32(24,buffer.sampleRate,true);v.setUint32(28,buffer.sampleRate*channels*2,true);v.setUint16(32,channels*2,true);v.setUint16(34,16,true);put(36,'data');v.setUint32(40,length,true);let offset=44;for(let i=0;i<buffer.length;i++)for(let c=0;c<channels;c++){const s=Math.max(-1,Math.min(1,buffer.getChannelData(c)[i]));v.setInt16(offset,s<0?s*0x8000:s*0x7fff,true);offset+=2;}return ab; }
     function adjustZoom(direction) {
@@ -958,9 +993,16 @@
     pushHistoryState(); applyHistorySettings(); loadLastSettings(); updateLabels(); loadSavedPresets();
     (function () {
       var fmt = document.getElementById('exportFormat');
-      if (fmt && window.matchMedia && window.matchMedia('(max-width: 760px)').matches) {
-        fmt.value = 'mp3';
+      var exportBtn = document.getElementById('exportButton');
+      var stickyBtn = document.getElementById('stickyExportBtn');
+      function syncFormatLabel() {
+        var label = (fmt && fmt.value === 'mp3') ? 'Export MP3' : 'Export WAV';
+        if (exportBtn) exportBtn.textContent = label;
+        if (stickyBtn) stickyBtn.textContent = label;
       }
+      if (fmt && window.matchMedia && window.matchMedia('(max-width: 760px)').matches) fmt.value = 'mp3';
+      if (fmt) fmt.addEventListener('change', syncFormatLabel);
+      syncFormatLabel();
     })();
   
     // Mobile step navigation
