@@ -109,6 +109,35 @@
     .plan-pill { margin-left:8px; color:var(--green); border:1px solid #3e695c; background:#122b27; border-radius:999px; padding:4px 9px; font-size:12px; font-weight:700; }
     .quota-upsell a { color:#ffc3e5; font-weight:700; }
     canvas { touch-action: none; }
+
+    /* Mobile step nav — less scroll, clearer flow */
+    .step-nav { display:none; gap:8px; margin:0 0 14px; padding:6px; border:1px solid var(--line); border-radius:14px; background:#161022; }
+    .step-nav button { flex:1; border:0; border-radius:10px; padding:11px 8px; font:700 12.5px/1.2 Inter,system-ui,sans-serif; color:var(--muted); background:transparent; cursor:pointer; }
+    .step-nav button.active { color:#1b102a; background:linear-gradient(105deg,var(--pink),#bea3ff); }
+    .step-nav button .n { display:block; font-size:10px; opacity:.85; font-weight:700; margin-bottom:2px; }
+    .sticky-export { display:none; }
+    @media (max-width:760px) {
+      .step-nav { display:flex; position:sticky; top:0; z-index:30; }
+      .hero { display:none; }
+      .workspace { gap:12px; }
+      .workspace[data-step="1"] .presets-panel,
+      .workspace[data-step="1"] .controls-panel { display:none; }
+      .workspace[data-step="2"] .upload-panel,
+      .workspace[data-step="2"] .controls-panel { display:none; }
+      .workspace[data-step="3"] .upload-panel,
+      .workspace[data-step="3"] .presets-panel { display:none; }
+      /* Keep preview available on steps 2-3 as compact strip */
+      .workspace[data-step="2"] .preview-panel h2,
+      .workspace[data-step="2"] .preview-panel > .muted,
+      .workspace[data-step="3"] .preview-panel h2,
+      .workspace[data-step="3"] .preview-panel > .muted { display:none; }
+      .workspace[data-step="2"] .preview-panel,
+      .workspace[data-step="3"] .preview-panel { padding:12px; }
+      .workspace[data-step="2"] .wave-wrap canvas,
+      .workspace[data-step="3"] .wave-wrap canvas { height:56px; }
+      .sticky-export { display:block; position:sticky; bottom:0; z-index:30; margin:12px 0 0; padding:12px 0 8px; background:linear-gradient(180deg,transparent,#0e0b17 28%); }
+      .sticky-export .export { width:100%; }
+    }
     @media (max-width:760px) {
       .workspace { grid-template-columns:1fr; grid-template-areas:"upload" "preview" "presets" "controls"; }
       header { margin-bottom:22px; gap:10px; flex-wrap:wrap; }
@@ -129,7 +158,12 @@
     <header><a class="brand" href="/" style="text-decoration:none;color:inherit"><span class="mark">R</span> Reverbly <span id="planPill" class="plan-pill" hidden>Free</span></a><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="header-link" href="/reverbly-account">Trial</a><a class="header-link" href="/reverbly-dashboard">Account</a></div></header>
     <div id="trialBanner" class="trial-banner" role="status"></div>
     <section class="hero"><h1>Make your audio<br>ready to post.</h1><p>Turn your original audio into slowed, sped up and looped versions for your next short-form video.</p></section>
-    <section class="workspace" aria-label="Audio editor">
+    <nav class="step-nav" id="stepNav" aria-label="Editor steps">
+      <button type="button" class="active" data-step="1"><span class="n">Step 1</span>Upload</button>
+      <button type="button" data-step="2"><span class="n">Step 2</span>Version</button>
+      <button type="button" data-step="3"><span class="n">Step 3</span>Export</button>
+    </nav>
+    <section class="workspace" id="workspace" data-step="1" aria-label="Audio editor">
       <div class="editor-column">
       <section class="panel upload-panel">
         <h2>1. Upload your audio</h2><p class="muted">MP3, WAV, M4A or other browser-supported audio files.</p>
@@ -199,7 +233,11 @@
       </div>
     </section>
     <p class="legal">Only upload audio you own or are licensed to use. Reverbly does not grant rights to copyrighted recordings. <a href="/reverbly-privacy" style="color:inherit">Privacy</a> · <a href="/reverbly-terms" style="color:inherit">Terms</a></p>
-  </main>
+  
+    <div class="sticky-export" id="stickyExport">
+      <button type="button" class="export" id="stickyExportBtn" disabled>Export WAV</button>
+    </div>
+</main>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="reverbly-supabase-config.js"></script>
   <script>
@@ -362,7 +400,7 @@
     function stop(reset=true) { if(source){ source.onended=null; source.stop(); source.disconnect(); source=null; } cancelAnimationFrame(animation); if(reset) currentOffset=clipStart; playButton.textContent='▶ Play'; setPosition(currentOffset); }
     function tick() { if(!source || !context) return; const elapsed=(context.currentTime-startedAt)*Number(speed.value)+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(tick); }
     function play() { if(!audioBuffer) return; if(!context) context=new AudioContext(); if(context.state==='suspended') context.resume(); if(source){ stop(false); return; } const end=previewEnd(); if(currentOffset>=end) currentOffset=clipStart; playOffset=currentOffset; source=graph(context,context.destination,currentOffset); source.onended=()=>stop(true); startedAt=context.currentTime; source.start(0,currentOffset,end-currentOffset); playButton.textContent='■ Pause'; tick(); }
-    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart')); clipStart=loop.value==='0' || !Number.isFinite(requestedClipStart) ? 0 : Math.max(0,Math.min(requestedClipStart,audioBuffer.duration-Number(loop.value))); fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
+    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart')); clipStart=loop.value==='0' || !Number.isFinite(requestedClipStart) ? 0 : Math.max(0,Math.min(requestedClipStart,audioBuffer.duration-Number(loop.value))); fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
 
     function updateTrialBanner() {
       if (!trialBanner) return;
@@ -585,6 +623,38 @@
     };
     if (historySettings.get('mode')) processMode = historySettings.get('mode');
     pushHistoryState(); applyHistorySettings(); loadLastSettings(); updateLabels(); loadSavedPresets();
+  
+    // Mobile step navigation
+    (function () {
+      const workspace = document.getElementById('workspace');
+      const stepNav = document.getElementById('stepNav');
+      const stickyBtn = document.getElementById('stickyExportBtn');
+      const exportBtn = document.getElementById('exportButton');
+      if (!workspace || !stepNav) return;
+      function setStep(step) {
+        workspace.setAttribute('data-step', String(step));
+        stepNav.querySelectorAll('button').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-step') === String(step));
+        });
+        try { workspace.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {}
+      }
+      stepNav.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-step]');
+        if (!btn) return;
+        setStep(btn.getAttribute('data-step'));
+      });
+      // After successful load, nudge to version step
+      const origLoadNotice = null;
+      if (stickyBtn && exportBtn) {
+        const sync = () => { stickyBtn.disabled = exportBtn.disabled; };
+        const obs = new MutationObserver(sync);
+        obs.observe(exportBtn, { attributes: true, attributeFilter: ['disabled'] });
+        stickyBtn.addEventListener('click', () => exportBtn.click());
+        sync();
+      }
+      window.reverblySetEditorStep = setStep;
+    })();
+
   </script>
 </body>
 </html>
