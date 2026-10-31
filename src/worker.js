@@ -26,7 +26,10 @@ export default {
     }
 
     if (response.status === 200) {
-      return response;
+      const headers = new Headers(response.headers);
+      headers.set("content-type", "text/html; charset=utf-8");
+      headers.set("content-disposition", "inline");
+      return new Response(response.body, { status: 200, headers });
     }
 
     // Explicit 404 page (do not silently send people home)
