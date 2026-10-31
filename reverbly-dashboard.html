@@ -45,7 +45,7 @@
         <div id="subscriptionNote" class="notice">Checking your subscription…</div><div id="planCompare" class="notice hidden" style="margin-top:12px"></div>
         <div class="actions">
           <a class="button" href="/reverbly-prototype">Open editor</a>
-          <a class="button secondary hidden" id="startTrial" href="/reverbly-account">Start 7-day trial</a>
+          <a class="button secondary hidden" id="startTrial" href="/reverbly-account">Upgrade plan</a>
           <button class="button secondary hidden" id="manageBilling" type="button">Manage billing</button>
           <button id="signOut" class="button secondary" type="button">Sign out</button>
         </div>
@@ -163,11 +163,11 @@
 
       const plan = profile?.plan || 'free';
       document.getElementById('plan').innerHTML = '<span class="badge">' +
-        (plan === 'trialing' ? 'Trial active' : plan === 'pro' ? 'Reverbly Pro' : 'Free') + '</span>';
+        (plan === 'trialing' ? 'Trial active' : plan === 'pro' ? 'Reverbly Pro' : plan === 'plus' ? 'Reverbly Plus' : 'Free') + '</span>';
       document.getElementById('exports').textContent =
         profile?.export_date === new Date().toISOString().slice(0, 10) ? (profile.export_count || 0) : 0;
 
-      const isPaid = plan === 'trialing' || plan === 'pro' ||
+      const isPaid = plan === 'trialing' || plan === 'pro' || plan === 'plus' ||
         subscription?.status === 'trialing' || subscription?.status === 'active';
       startTrial.classList.toggle('hidden', isPaid);
       const compareEl=document.getElementById('planCompare'); if(compareEl){ if(isPaid) compareEl.classList.add('hidden'); }
@@ -180,8 +180,8 @@
           : 'Your trial is active. End date is being confirmed.';
       } else if (subscription?.status === 'active') {
         subscriptionNote.textContent = subscription.current_period_ends_at
-          ? 'Reverbly Pro is active. Current period ends ' + new Date(subscription.current_period_ends_at).toLocaleDateString() + '.'
-          : 'Your Reverbly Pro subscription is active.';
+          ? 'Your paid plan is active. Current period ends ' + new Date(subscription.current_period_ends_at).toLocaleDateString() + '.'
+          : 'Your paid subscription is active.';
       } else if (subscription?.status === 'canceled' || subscription?.status === 'past_due') {
         subscriptionNote.textContent = 'Subscription status: ' + subscription.status + '. You can start a new trial when ready.';
       } else {
@@ -189,7 +189,7 @@
         const compare = document.getElementById('planCompare');
         if (compare) {
           compare.classList.remove('hidden');
-          compare.innerHTML = '<strong>Free vs Pro</strong><br>Free: 1 export/day, 20&nbsp;MB, 5&nbsp;min · Pro/Trial: unlimited exports, 80&nbsp;MB, 20&nbsp;min, saved presets, history, batch export.';
+          compare.innerHTML = '<strong>Free · Plus · Pro</strong><br>Free: 1 export/day · Plus ($3.99): unlimited + history · Pro ($7.99): Plus + saved presets, higher limits, 7-day trial.';
         }
       }
       loadHistory();
