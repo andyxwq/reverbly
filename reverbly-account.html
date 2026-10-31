@@ -33,6 +33,21 @@
     .link-btn { display:block; width:100%; margin-top:10px; border:0; background:transparent; color:#cdbbff; font-size:13px; font-weight:600; cursor:pointer; text-align:center; padding:6px; }
     .link-btn:hover { text-decoration:underline; }
     .link-btn[hidden] { display:none; }
+
+    .confirm-panel{display:none;text-align:center;padding:8px 0 4px}
+    .confirm-panel.show{display:block}
+    .confirm-icon{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 18px;border-radius:18px;font-size:28px;color:#0e0b17;background:linear-gradient(135deg,var(--green),#5dd6a8);box-shadow:0 12px 36px #84e8c155}
+    .confirm-panel h2{margin:0 0 10px;font-size:28px;letter-spacing:-.8px;line-height:1.15}
+    .confirm-panel .muted{margin:0 auto 22px;max-width:360px}
+    .confirm-actions{display:flex;flex-direction:column;gap:10px}
+    .confirm-actions .start{margin:0}
+    .confirm-actions .secondary-btn{margin:0}
+    .mail-wait{display:none;margin-top:18px;padding:16px;border-radius:14px;border:1px solid #4a3e63;background:#1a1429;text-align:left}
+    .mail-wait.show{display:block}
+    .mail-wait strong{display:block;margin-bottom:6px;font-size:15px}
+    .mail-wait p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45}
+    .mail-wait code{color:#e8dcff;font-size:12.5px}
+
     #passwordFields { margin-top:4px; }
 </style>
 </head>
@@ -60,9 +75,23 @@
           <button class="secondary-btn" id="magicBtn" type="button">Email me a magic link instead</button>
           <button class="link-btn" id="forgotBtn" type="button">Forgot password?</button>
           <button class="link-btn" id="backToSignIn" type="button" hidden>← Back to sign in</button>
-          <p class="safe"><span>●</span> Card details are handled securely by Stripe. Cancel anytime from your account.</p>
+          <p class="safe" id="safeNote"><span>●</span> Card details are handled securely by Stripe. Cancel anytime from your account.</p>
           <p id="success" class="success" aria-live="polite"></p>
+          <div id="mailWait" class="mail-wait" role="status">
+            <strong>Check your inbox</strong>
+            <p>We sent a confirmation link to <code id="mailWaitEmail"></code>. Open it to activate your account, then sign in here.</p>
+          </div>
         </form>
+        <div id="confirmPanel" class="confirm-panel" role="status">
+          <div class="confirm-icon" aria-hidden="true">✓</div>
+          <h2>Email confirmed</h2>
+          <p class="muted" id="confirmText">Your Reverbly account is ready. Start your trial or open the editor.</p>
+          <div class="confirm-actions">
+            <button type="button" class="start" id="confirmTrialBtn">Start 7-day trial →</button>
+            <a class="secondary-btn" id="confirmEditorLink" href="/reverbly-prototype" style="text-align:center;text-decoration:none;display:block">Open editor</a>
+            <a class="link-btn" href="/reverbly-dashboard">Go to account</a>
+          </div>
+        </div>
       </section>
       <aside class="panel plan">
         <div class="topline"><h2>Reverbly Pro</h2><span class="tag">7-day trial</span></div>
@@ -192,10 +221,43 @@
       return url.toString();
     }
 
+    const formEl = document.getElementById('trialForm');
+    const confirmPanel = document.getElementById('confirmPanel');
+    const confirmText = document.getElementById('confirmText');
+    const mailWait = document.getElementById('mailWait');
+    const mailWaitEmail = document.getElementById('mailWaitEmail');
+    const confirmTrialBtn = document.getElementById('confirmTrialBtn');
+    const safeNote = document.getElementById('safeNote');
+    let emailJustConfirmed = false;
+
+    function showConfirmUI(email) {
+      formEl.style.display = 'none';
+      confirmPanel.classList.add('show');
+      if (email) {
+        confirmText.textContent = 'You are signed in as ' + email + '. Start your 7-day trial or jump into the editor.';
+      }
+      if (safeNote) safeNote.style.display = 'none';
+    }
+
+    function showMailWait(email) {
+      mailWaitEmail.textContent = email || '';
+      mailWait.classList.add('show');
+    }
+
+    function hideMailWait() {
+      mailWait.classList.remove('show');
+    }
+
+    function cameFromEmailLink() {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      return /type=signup|type=email|type=magiclink|type=recovery/i.test(hash + search)
+        || /access_token=/i.test(hash);
+    }
+
     async function refreshAccount() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return;
-      // If this session is only for password recovery, stay on recovery UI
       if (mode === 'recovery') {
         activeSession = session;
         return;
@@ -210,7 +272,21 @@
       modeTabs.hidden = true;
       termsWrap.style.display = 'none';
       passwordFields.hidden = true;
+      hideMailWait();
+
+      if (emailJustConfirmed || cameFromEmailLink()) {
+        emailJustConfirmed = false;
+        showConfirmUI(session.user.email);
+        // Clean hash tokens from URL without reload
+        try {
+          const clean = returnTo;
+          window.history.replaceState({}, document.title, clean);
+        } catch (_) {}
+        return;
+      }
+
       submitBtn.textContent = 'Start 7-day trial →';
+      formEl.style.display = '';
       showMessage('Signed in as ' + session.user.email + '. Continue to Stripe to confirm your trial.', false);
     }
 
@@ -313,10 +389,12 @@
           submitBtn.textContent = 'Sign in →';
         } else if (data.session) {
           activeSession = data.session;
+          emailJustConfirmed = true;
           showMessage('Account created. You are signed in as ' + email + '.', false);
           await refreshAccount();
         } else {
-          showMessage('Account created. Check ' + email + ' for a confirmation link, then sign in.', false);
+          showMessage('Account created. Confirm your email to continue.', false);
+          showMailWait(email);
           setMode('signin');
           submitBtn.textContent = 'Sign in →';
         }
@@ -360,11 +438,27 @@
       submitBtn.disabled = false;
     });
 
+    if (confirmTrialBtn) {
+      confirmTrialBtn.addEventListener('click', () => {
+        if (activeSession?.user?.id) {
+          if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start');
+          window.location.assign(checkoutUrl(activeSession.user.id));
+        }
+      });
+    }
+
     supabaseClient.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         activeSession = session;
+        formEl.style.display = '';
+        confirmPanel.classList.remove('show');
         setMode('recovery');
         showMessage('Choose a new password for your account.', false);
+        return;
+      }
+      if (event === 'SIGNED_IN' && session) {
+        if (cameFromEmailLink()) emailJustConfirmed = true;
+        if (mode !== 'recovery') refreshAccount();
         return;
       }
       if (session && mode !== 'recovery') refreshAccount();
