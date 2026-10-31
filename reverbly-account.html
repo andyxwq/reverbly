@@ -30,6 +30,9 @@
     .secondary-btn { width:100%; margin-top:10px; border:1px solid #4a3e63; border-radius:12px; padding:12px 14px; font-weight:700; color:var(--ink); background:#241c36; cursor:pointer; }
     .secondary-btn:hover { border-color:#6a5a8a; }
     .secondary-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .link-btn { display:block; width:100%; margin-top:10px; border:0; background:transparent; color:#cdbbff; font-size:13px; font-weight:600; cursor:pointer; text-align:center; padding:6px; }
+    .link-btn:hover { text-decoration:underline; }
+    .link-btn[hidden] { display:none; }
     #passwordFields { margin-top:4px; }
 </style>
 </head>
@@ -41,20 +44,22 @@
         <h1>Try Pro for 7 days.</h1>
         <p class="muted">Create without limits. Stripe shows the charge date before you confirm.</p>
         <form id="trialForm" class="form">
-          <div class="mode-tabs" role="tablist" aria-label="Account mode">
+          <div class="mode-tabs" role="tablist" aria-label="Account mode" id="modeTabs">
             <button type="button" class="mode-tab active" data-mode="signin" id="tabSignIn">Sign in</button>
             <button type="button" class="mode-tab" data-mode="signup" id="tabSignUp">Create account</button>
           </div>
-          <label class="label" for="email">Email address</label>
+          <label class="label" for="email" id="emailLabel">Email address</label>
           <input class="input" id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
           <div id="passwordFields">
-            <label class="label" for="password">Password</label>
+            <label class="label" for="password" id="passwordLabel">Password</label>
             <input class="input" id="password" type="password" autocomplete="current-password" placeholder="At least 6 characters" minlength="6">
             <p class="hint" id="passwordHint">Use your password to sign in. You can also use a magic link below.</p>
           </div>
           <label class="check" id="termsWrap"><input id="terms" type="checkbox"><span>I understand my trial becomes <strong>Reverbly Pro at $7/month</strong> after 7 days unless I cancel before then.</span></label>
           <button class="start" id="submitBtn" type="submit">Sign in →</button>
           <button class="secondary-btn" id="magicBtn" type="button">Email me a magic link instead</button>
+          <button class="link-btn" id="forgotBtn" type="button">Forgot password?</button>
+          <button class="link-btn" id="backToSignIn" type="button" hidden>← Back to sign in</button>
           <p class="safe"><span>●</span> Card details are handled securely by Stripe. Cancel anytime from your account.</p>
           <p id="success" class="success" aria-live="polite"></p>
         </form>
@@ -81,11 +86,16 @@
     const message = document.getElementById('success');
     const submitBtn = document.getElementById('submitBtn');
     const magicBtn = document.getElementById('magicBtn');
+    const forgotBtn = document.getElementById('forgotBtn');
+    const backToSignIn = document.getElementById('backToSignIn');
+    const modeTabs = document.getElementById('modeTabs');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
+    const passwordFields = document.getElementById('passwordFields');
     const termsInput = document.getElementById('terms');
     const termsWrap = document.getElementById('termsWrap');
     const passwordHint = document.getElementById('passwordHint');
+    const passwordLabel = document.getElementById('passwordLabel');
     const tabSignIn = document.getElementById('tabSignIn');
     const tabSignUp = document.getElementById('tabSignUp');
     const returnTo = (function () {
@@ -96,7 +106,7 @@
       return u.toString();
     })();
     let activeSession = null;
-    let mode = 'signin'; // signin | signup
+    let mode = 'signin'; // signin | signup | forgot | recovery
 
     function showMessage(text, isError) {
       message.textContent = text;
@@ -104,19 +114,71 @@
       message.classList.toggle('err', !!isError);
     }
 
+    function mapAuthError(error, context) {
+      const raw = (error && error.message) ? error.message : '';
+      const lower = raw.toLowerCase();
+      if (lower.includes('already registered') || lower.includes('already been registered') || lower.includes('user already exists')) {
+        return 'An account with this email already exists. Sign in, or use Forgot password.';
+      }
+      if (lower.includes('invalid login') || lower.includes('invalid credentials')) {
+        return 'Wrong email or password. Try again, or use Forgot password.';
+      }
+      if (lower.includes('email not confirmed')) {
+        return 'Please confirm your email first. Check your inbox for the Reverbly link.';
+      }
+      if (lower.includes('rate limit') || lower.includes('too many')) {
+        return 'Too many attempts. Wait a minute and try again.';
+      }
+      if (lower.includes('error sending') || lower.includes('confirmation email')) {
+        return 'Could not send the email right now. Try magic link, or sign in if you already have an account.';
+      }
+      return raw || (context === 'signup' ? 'Could not create the account.' : 'Something went wrong. Please try again.');
+    }
+
+    function isExistingUserSignUp(data) {
+      // Supabase often returns a user with empty identities when email is already registered
+      const user = data && data.user;
+      if (!user) return false;
+      if (Array.isArray(user.identities) && user.identities.length === 0) return true;
+      return false;
+    }
+
     function setMode(next) {
       mode = next;
+      const signedIn = !!activeSession;
       tabSignIn.classList.toggle('active', mode === 'signin');
       tabSignUp.classList.toggle('active', mode === 'signup');
-      passwordInput.autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
-      passwordInput.placeholder = mode === 'signup' ? 'Create a password (min 6 chars)' : 'Your password';
-      passwordHint.textContent = mode === 'signup'
-        ? 'Create a password so you can sign in anytime. We can also email a magic link.'
-        : 'Use your password to sign in. You can also use a magic link below.';
+      modeTabs.hidden = signedIn || mode === 'forgot' || mode === 'recovery';
+      emailInput.hidden = mode === 'recovery';
+      document.getElementById('emailLabel').hidden = mode === 'recovery';
+      passwordFields.hidden = mode === 'forgot';
       termsWrap.style.display = mode === 'signup' ? '' : 'none';
       termsInput.required = mode === 'signup';
-      if (!activeSession) {
-        submitBtn.textContent = mode === 'signup' ? 'Create account →' : 'Sign in →';
+      magicBtn.hidden = mode === 'forgot' || mode === 'recovery' || signedIn;
+      forgotBtn.hidden = mode !== 'signin' || signedIn;
+      backToSignIn.hidden = !(mode === 'forgot' || mode === 'recovery') || signedIn;
+
+      if (mode === 'signup') {
+        passwordInput.autocomplete = 'new-password';
+        passwordInput.placeholder = 'Create a password (min 6 chars)';
+        passwordLabel.textContent = 'Password';
+        passwordHint.textContent = 'One account per email. If you already registered, sign in instead.';
+        if (!signedIn) submitBtn.textContent = 'Create account →';
+      } else if (mode === 'signin') {
+        passwordInput.autocomplete = 'current-password';
+        passwordInput.placeholder = 'Your password';
+        passwordLabel.textContent = 'Password';
+        passwordHint.textContent = 'Use your password to sign in. You can also use a magic link below.';
+        if (!signedIn) submitBtn.textContent = 'Sign in →';
+      } else if (mode === 'forgot') {
+        if (!signedIn) submitBtn.textContent = 'Send reset link →';
+        passwordHint.textContent = '';
+      } else if (mode === 'recovery') {
+        passwordInput.autocomplete = 'new-password';
+        passwordInput.placeholder = 'New password (min 6 chars)';
+        passwordLabel.textContent = 'New password';
+        passwordHint.textContent = 'Choose a new password for your Reverbly account.';
+        if (!signedIn) submitBtn.textContent = 'Save new password →';
       }
     }
 
@@ -133,39 +195,102 @@
     async function refreshAccount() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return;
+      // If this session is only for password recovery, stay on recovery UI
+      if (mode === 'recovery') {
+        activeSession = session;
+        return;
+      }
       activeSession = session;
       emailInput.value = session.user.email || '';
       emailInput.disabled = true;
       passwordInput.disabled = true;
-      magicBtn.style.display = 'none';
-      tabSignIn.style.display = 'none';
-      tabSignUp.style.display = 'none';
+      magicBtn.hidden = true;
+      forgotBtn.hidden = true;
+      backToSignIn.hidden = true;
+      modeTabs.hidden = true;
       termsWrap.style.display = 'none';
+      passwordFields.hidden = true;
       submitBtn.textContent = 'Start 7-day trial →';
       showMessage('Signed in as ' + session.user.email + '. Continue to Stripe to confirm your trial.', false);
     }
 
     tabSignIn.addEventListener('click', () => setMode('signin'));
     tabSignUp.addEventListener('click', () => setMode('signup'));
+    forgotBtn.addEventListener('click', () => {
+      setMode('forgot');
+      showMessage('Enter your email and we will send a Reverbly password reset link.', false);
+    });
+    backToSignIn.addEventListener('click', () => {
+      setMode('signin');
+      showMessage('', false);
+      message.classList.remove('show');
+    });
     setMode('signin');
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (activeSession?.user?.id) {
+      if (activeSession?.user?.id && mode !== 'recovery') {
         if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start');
         window.location.assign(checkoutUrl(activeSession.user.id));
         return;
       }
+
       const email = emailInput.value.trim();
       const password = passwordInput.value;
+
+      if (mode === 'forgot') {
+        if (!email) {
+          showMessage('Enter your email address.', true);
+          emailInput.focus();
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending reset link…';
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: returnTo
+        });
+        if (error) {
+          showMessage(mapAuthError(error, 'forgot'), true);
+        } else {
+          showMessage('If an account exists for ' + email + ', a reset link is on its way. Check your inbox.', false);
+        }
+        submitBtn.textContent = 'Send reset link →';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      if (mode === 'recovery') {
+        if (!password || password.length < 6) {
+          showMessage('Enter a new password with at least 6 characters.', true);
+          passwordInput.focus();
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving…';
+        const { error } = await supabaseClient.auth.updateUser({ password });
+        if (error) {
+          showMessage(mapAuthError(error, 'recovery'), true);
+          submitBtn.textContent = 'Save new password →';
+          submitBtn.disabled = false;
+          return;
+        }
+        showMessage('Password updated. You are signed in.', false);
+        mode = 'signin';
+        await refreshAccount();
+        submitBtn.disabled = false;
+        return;
+      }
+
       if (!email) return;
       if (!password || password.length < 6) {
         showMessage('Enter a password with at least 6 characters.', true);
         passwordInput.focus();
         return;
       }
+
       submitBtn.disabled = true;
       magicBtn.disabled = true;
+
       if (mode === 'signup') {
         if (!termsInput.checked) {
           showMessage('Please accept the trial terms to create an account.', true);
@@ -180,22 +305,26 @@
           options: { emailRedirectTo: returnTo }
         });
         if (error) {
-          showMessage(error.message || 'Could not create the account.', true);
+          showMessage(mapAuthError(error, 'signup'), true);
           submitBtn.textContent = 'Create account →';
+        } else if (isExistingUserSignUp(data)) {
+          showMessage('An account with this email already exists. Sign in, or use Forgot password.', true);
+          setMode('signin');
+          submitBtn.textContent = 'Sign in →';
         } else if (data.session) {
           activeSession = data.session;
           showMessage('Account created. You are signed in as ' + email + '.', false);
           await refreshAccount();
         } else {
-          showMessage('Account created. Check ' + email + ' to confirm your email, then sign in.', false);
-          submitBtn.textContent = 'Create account →';
+          showMessage('Account created. Check ' + email + ' for a confirmation link, then sign in.', false);
           setMode('signin');
+          submitBtn.textContent = 'Sign in →';
         }
       } else {
         submitBtn.textContent = 'Signing in…';
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
-          showMessage(error.message || 'Could not sign in. Check email and password.', true);
+          showMessage(mapAuthError(error, 'signin'), true);
           submitBtn.textContent = 'Sign in →';
         } else {
           showMessage('Signed in. Loading your account…', false);
@@ -222,7 +351,7 @@
         options: { emailRedirectTo: returnTo }
       });
       if (error) {
-        showMessage(error.message || 'Could not send the magic link.', true);
+        showMessage(mapAuthError(error, 'magic'), true);
       } else {
         showMessage('Check ' + email + ' for your Reverbly sign-in link. After signing in you will return here.', false);
       }
@@ -231,8 +360,14 @@
       submitBtn.disabled = false;
     });
 
-    supabaseClient.auth.onAuthStateChange((_event, session) => {
-      if (session) refreshAccount();
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        activeSession = session;
+        setMode('recovery');
+        showMessage('Choose a new password for your account.', false);
+        return;
+      }
+      if (session && mode !== 'recovery') refreshAccount();
     });
     refreshAccount();
   </script>  </script>
