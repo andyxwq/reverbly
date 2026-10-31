@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pricing — Reverbly</title>
-  <meta name="description" content="Free daily export or Reverbly Pro at $7/month with a 7-day trial. Compare plans and FAQ.">
+  <meta name="description" content="Free, Plus at $3.99/month, or Pro at $7.99/month with a 7-day trial.">
   <meta name="theme-color" content="#0e0b17">
   <meta property="og:site_name" content="Reverbly">
   <meta property="og:title" content="Pricing — Reverbly">
-  <meta property="og:description" content="Free daily export or Reverbly Pro at $7/month with a 7-day trial. Compare plans and FAQ.">
+  <meta property="og:description" content="Free, Plus at $3.99/month, or Pro at $7.99/month with a 7-day trial.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://reverbly.app/reverbly-pricing">
   <meta property="og:image" content="https://reverbly.app/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Pricing — Reverbly">
-  <meta name="twitter:description" content="Free daily export or Reverbly Pro at $7/month with a 7-day trial. Compare plans and FAQ.">
+  <meta name="twitter:description" content="Free, Plus at $3.99/month, or Pro at $7.99/month with a 7-day trial.">
   <meta name="twitter:image" content="https://reverbly.app/og.png">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
@@ -90,11 +90,11 @@
     .page-hero { padding:52px 0 28px; }
     .page-hero h1 { margin:0 0 12px; font-size:clamp(32px,5.2vw,48px); letter-spacing:-1.8px; line-height:1.05; }
     .page-hero p { margin:0; color:var(--muted); max-width:540px; font-size:17px; line-height:1.5; }
-    .feature { min-height:150px; }
-    .feature .tag { display:inline-block; margin-bottom:10px; padding:4px 9px; border-radius:999px; border:1px solid #4a3e63; background:#211932; color:#d8ceef; font-size:11px; font-weight:700; }
+    .pricing { grid-template-columns:repeat(3,1fr); gap:14px; }
+    @media (max-width:900px) { .pricing { grid-template-columns:1fr; } }
     .compare { width:100%; border-collapse:collapse; margin:12px 0 8px; font-size:14px; }
-    .compare th, .compare td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; }
-    .compare th { color:var(--muted); font-weight:600; font-size:13px; }
+    .compare th, .compare td { padding:12px 10px; border-bottom:1px solid var(--line); text-align:left; }
+    .compare th { color:var(--muted); font-weight:600; font-size:12.5px; }
     .compare td:not(:first-child), .compare th:not(:first-child) { text-align:center; }
     .compare .yes { color:var(--green); font-weight:700; }
     .compare .no { color:#6b6280; }
@@ -103,13 +103,9 @@
     .faq summary { cursor:pointer; font-weight:700; list-style:none; }
     .faq summary::-webkit-details-marker { display:none; }
     .faq details p { margin:10px 0 0; color:var(--muted); font-size:14px; line-height:1.5; }
-    .split-cta { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-    @media (max-width:720px) {
-      .split-cta { grid-template-columns:1fr; }
-      .compare th:nth-child(2), .compare td:nth-child(2) { display:none; }
-    }
     footer.site-foot { margin-top:48px; padding:28px 0 40px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; color:#998eae; font-size:13px; }
     footer.site-foot a { color:#cdbbff; }
+    .plan.plus { border-color:#5a4a78; }
 </style>
 </head>
 <body>
@@ -129,8 +125,8 @@
 
     <section class="page-hero wrap">
       <span class="eyebrow">Pricing</span>
-      <h1>Start free. Upgrade when you outgrow it.</h1>
-      <p>One solid free export per day — or Pro when Reverbly is part of every post.</p>
+      <h1>Simple plans. Fair prices.</h1>
+      <p>Free to try every day. Plus for unlimited exports. Pro when you want presets, history and higher limits.</p>
     </section>
 
     <section class="section wrap">
@@ -147,21 +143,35 @@
             <li>No card required</li>
           </ul>
           <a class="outline" href="/reverbly-prototype">Create for free</a>
-          <p class="fine">Sign in anytime if you want history later.</p>
+          <p class="fine">Upgrade when you need more than one export a day.</p>
+        </article>
+        <article class="plan plus">
+          <div class="plan-label">Plus</div>
+          <h3>Unlimited exports</h3>
+          <p class="price">$3.99 <small>/ month</small></p>
+          <ul>
+            <li>Unlimited exports</li>
+            <li>Export history</li>
+            <li>Re-download past WAVs</li>
+            <li>Everything in Free</li>
+            <li>Cancel anytime</li>
+          </ul>
+          <a class="outline" href="/reverbly-account">Get Plus</a>
+          <p class="fine">Best if you post often and hit the daily limit.</p>
         </article>
         <article class="plan pro">
           <div class="plan-label">Pro</div>
-          <h3>Unlimited workflow</h3>
-          <p class="price">$7 <small>/ month</small></p>
+          <h3>Full workflow</h3>
+          <p class="price">$7.99 <small>/ month</small></p>
           <ul>
-            <li>Unlimited exports</li>
-            <li>7-day free trial</li>
+            <li>Everything in Plus</li>
             <li>Saved presets</li>
-            <li>Export history &amp; re-download</li>
-            <li>Larger / longer files</li>
+            <li>Higher file size / length limits</li>
+            <li>7-day free trial</li>
+            <li>Priority for new tools</li>
           </ul>
-          <a class="primary" href="/reverbly-account">Start 7-day trial <span>→</span></a>
-          <p class="fine">Cancel anytime before the trial ends — managed in Stripe.</p>
+          <a class="primary" href="/reverbly-account">Start Pro trial <span>→</span></a>
+          <p class="fine">Try Pro free for 7 days. Cancel before it ends — no charge.</p>
         </article>
       </div>
     </section>
@@ -169,21 +179,21 @@
     <section class="section wrap">
       <div class="section-heading">
         <h2>Compare plans</h2>
-        <p>Same sound engine on both — Pro removes the daily limit.</p>
+        <p>Same editor on every plan — paid plans remove the daily cap.</p>
       </div>
       <div class="panel" style="padding:8px 4px;overflow:auto">
         <table class="compare">
           <thead>
-            <tr><th>Feature</th><th>Free</th><th>Pro</th></tr>
+            <tr><th>Feature</th><th>Free</th><th>Plus</th><th>Pro</th></tr>
           </thead>
           <tbody>
-            <tr><td>Editor, presets, preview</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
-            <tr><td>Bass boost &amp; keep pitch</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
-            <tr><td>WAV export</td><td class="yes">1 / day</td><td class="yes">Unlimited</td></tr>
-            <tr><td>Saved presets</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>Export history</td><td class="no">—</td><td class="yes">Yes</td></tr>
-            <tr><td>Longer / larger files</td><td class="no">Standard</td><td class="yes">Higher limits</td></tr>
-            <tr><td>Price</td><td>$0</td><td>$7 / month</td></tr>
+            <tr><td>Editor, presets, preview</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+            <tr><td>Bass boost &amp; keep pitch</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+            <tr><td>WAV export</td><td class="yes">1 / day</td><td class="yes">Unlimited</td><td class="yes">Unlimited</td></tr>
+            <tr><td>Export history</td><td class="no">—</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+            <tr><td>Saved presets</td><td class="no">—</td><td class="no">—</td><td class="yes">Yes</td></tr>
+            <tr><td>Higher upload limits</td><td class="no">Standard</td><td class="no">Standard</td><td class="yes">Higher</td></tr>
+            <tr><td>Price</td><td>$0</td><td>$3.99 / mo</td><td>$7.99 / mo</td></tr>
           </tbody>
         </table>
       </div>
@@ -192,33 +202,33 @@
     <section class="section wrap">
       <div class="section-heading">
         <h2>Questions</h2>
-        <p>Short answers before you start a trial.</p>
+        <p>Short answers before you subscribe.</p>
       </div>
       <div class="faq">
         <details open>
-          <summary>Is the trial really free?</summary>
-          <p>Yes. You get 7 days of Pro. Stripe shows the charge date before you confirm. Cancel before the trial ends and you are not charged.</p>
+          <summary>What is the Pro trial?</summary>
+          <p>7 days of Pro for free. Stripe shows the charge date before you confirm. Cancel before the trial ends and you are not charged.</p>
         </details>
         <details>
-          <summary>Do I need an account for Free?</summary>
-          <p>No for your first exports. Create an account when you want Pro, history, or to sign in on another device.</p>
+          <summary>Plus vs Pro?</summary>
+          <p>Plus is unlimited exports and history at $3.99. Pro adds saved presets and higher file limits at $7.99.</p>
         </details>
         <details>
           <summary>Can I cancel anytime?</summary>
-          <p>Yes. Manage or cancel from your Reverbly account via the Stripe customer portal.</p>
+          <p>Yes. Manage or cancel from your account via the Stripe customer portal.</p>
         </details>
         <details>
-          <summary>What files can I upload?</summary>
-          <p>Common browser-supported formats such as MP3, WAV and M4A. Free has standard size/length limits; Pro raises them.</p>
+          <summary>Do I need an account for Free?</summary>
+          <p>No for your first exports. Create an account when you want Plus, Pro, or history on another device.</p>
         </details>
       </div>
     </section>
 
     <section class="cta wrap">
       <h2>Ready when you are</h2>
-      <p>Try the editor free, or start Pro with a 7-day trial.</p>
+      <p>Stay on Free, get Plus for unlimited exports, or try Pro for 7 days.</p>
       <div class="hero-actions" style="justify-content:center;margin-top:18px">
-        <a class="primary" href="/reverbly-account">Start 7-day trial <span>→</span></a>
+        <a class="primary" href="/reverbly-account">Start Pro trial <span>→</span></a>
         <a class="outline" href="/reverbly-prototype">Open editor</a>
       </div>
     </section>
