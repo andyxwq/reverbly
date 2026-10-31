@@ -174,6 +174,15 @@
         <h2>1. Upload your audio</h2><p class="muted">MP3, WAV, M4A or other browser-supported audio files.</p>
         <div id="dropzone" class="dropzone"><div><div class="upload-icon">↥</div><strong>Drop an audio file here</strong><span class="muted">or select a file from your device</span><br><button id="chooseButton" class="choose" type="button">Choose audio</button><div id="fileName" class="file-name" aria-live="polite"></div></div></div>
         <input id="audioFile" type="file" accept="audio/*" hidden>
+        <div style="margin-top:14px">
+          <label for="audioUrl" class="muted" style="display:block;margin-bottom:6px;font-size:13px">Direct audio link (a file you host: MP3, WAV, M4A)</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="audioUrl" type="url" inputmode="url" placeholder="https://your-host/track.mp3" autocomplete="off" style="flex:1;min-width:180px;border:1px solid #4a3e63;border-radius:10px;background:#120e1c;color:#f6f3ff;padding:10px 12px">
+            <button id="loadUrlBtn" class="choose" type="button">Load link</button>
+            <button id="recordTabBtn" class="choose" type="button">Record tab audio</button>
+          </div>
+          <p class="muted" style="font-size:12px;margin:8px 0 0;line-height:1.45">TikTok, Instagram and YouTube links cannot be imported. Play the video yourself, then record the tab — only for audio you have the rights to use.</p>
+        </div>
       </section>
       <section class="panel preview-panel">
         <h2>3. Preview your clip</h2><p class="muted">Drag the pink handles to trim start and end. Click inside the selection to seek.</p>
@@ -631,7 +640,7 @@
       link.download = outputName;
       link.click();
       URL.revokeObjectURL(link.href);
-      notice.textContent = quota.message || ('Exported ' + formatTime(clipStart) + '–' + formatTime(previewEnd()) + ' as ' + ((document.getElementById('exportFormat') && document.getElementById('exportFormat').value === 'mp3') ? 'MP3' : 'WAV') + '.');
+      notice.textContent = (quota.message ? quota.message + ' ' : '') + 'Ready for TikTok, Reels and Shorts. File: ' + outputName;
       updateProgress(100, 'Download ready');
       await saveExportHistory(blob, outputName);
       if (window.reverblyTrack) window.reverblyTrack('export_success', { plan: currentPlan, speed: Number(speed.value), reverb: Number(reverb.value) });
@@ -720,6 +729,78 @@
       applySnapshot(historyStack[historyIndex]);
     }
     chooseButton.onclick=()=>audioFile.click(); audioFile.onchange=e=>load(e.target.files[0]); ['dragenter','dragover'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.add('drag')})); ['dragleave','drop'].forEach(e=>dropzone.addEventListener(e,x=>{x.preventDefault();dropzone.classList.remove('drag')})); dropzone.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
+    document.addEventListener('paste', event => {
+      const file = event.clipboardData && event.clipboardData.files && event.clipboardData.files[0];
+      if (file) load(file);
+    });
+    const audioUrl = document.getElementById('audioUrl');
+    const loadUrlBtn = document.getElementById('loadUrlBtn');
+    const recordTabBtn = document.getElementById('recordTabBtn');
+    const blockedHosts = /(^|\.)((youtube\.com)|(youtu\.be)|(youtube-nocookie\.com)|(tiktok\.com)|(instagram\.com)|(facebook\.com)|(fb\.watch)|(spotify\.com)|(soundcloud\.com)|(music\.apple\.com))$/i;
+    async function loadFromDirectUrl() {
+      const raw = (audioUrl && audioUrl.value || '').trim();
+      let url;
+      try { url = new URL(raw); } catch { notice.textContent = 'Paste a full link to an audio file you host.'; return; }
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') { notice.textContent = 'Only http or https links work.'; return; }
+      if (blockedHosts.test(url.hostname)) {
+        notice.textContent = 'That site cannot be imported. Play it yourself and use Record tab audio — only if you have the rights.';
+        return;
+      }
+      loadUrlBtn.disabled = true;
+      notice.textContent = 'Loading audio from your link…';
+      try {
+        const response = await fetch(url.href);
+        if (!response.ok) throw new Error('bad status');
+        const blob = await response.blob();
+        const name = decodeURIComponent((url.pathname.split('/').pop() || 'audio-from-link').split('?')[0]) || 'audio-from-link';
+        const looksAudio = (blob.type || '').startsWith('audio/') || /\.(mp3|wav|m4a|aac|ogg|flac|webm|mpeg)$/i.test(name);
+        if (!looksAudio) { notice.textContent = 'That link is not a direct audio file. Use an MP3, WAV or M4A URL.'; return; }
+        const type = (blob.type || '').startsWith('audio/') ? blob.type : 'audio/mpeg';
+        await load(new File([blob], name, { type }));
+      } catch {
+        notice.textContent = 'The host blocked this link. Download the file, then drop it here.';
+      } finally {
+        loadUrlBtn.disabled = false;
+      }
+    }
+    if (loadUrlBtn) loadUrlBtn.onclick = loadFromDirectUrl;
+    if (audioUrl) audioUrl.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); loadFromDirectUrl(); } });
+    let tabRecorder = null;
+    if (recordTabBtn) recordTabBtn.onclick = async () => {
+      if (tabRecorder && tabRecorder.state === 'recording') { tabRecorder.stop(); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        notice.textContent = 'Tab recording is not available in this browser. Use Chrome or Edge.';
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        if (!stream.getAudioTracks().length) {
+          stream.getTracks().forEach(track => track.stop());
+          notice.textContent = 'No tab audio. In the share dialog, turn on “Share tab audio”.';
+          return;
+        }
+        const audioStream = new MediaStream(stream.getAudioTracks());
+        const chunks = [];
+        const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+        tabRecorder = new MediaRecorder(audioStream, mime ? { mimeType: mime } : undefined);
+        tabRecorder.ondataavailable = event => { if (event.data && event.data.size) chunks.push(event.data); };
+        tabRecorder.onstop = () => {
+          stream.getTracks().forEach(track => track.stop());
+          recordTabBtn.textContent = 'Record tab audio';
+          const blob = new Blob(chunks, { type: tabRecorder.mimeType || 'audio/webm' });
+          tabRecorder = null;
+          if (!blob.size) { notice.textContent = 'Recording was empty.'; return; }
+          load(new File([blob], 'tab-recording.webm', { type: blob.type || 'audio/webm' }));
+        };
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) videoTrack.addEventListener('ended', () => { if (tabRecorder && tabRecorder.state === 'recording') tabRecorder.stop(); });
+        tabRecorder.start();
+        recordTabBtn.textContent = 'Stop recording';
+        notice.textContent = 'Recording this tab. Press Stop when you have the part you need. Only record audio you have rights to use.';
+      } catch {
+        notice.textContent = 'Recording cancelled.';
+      }
+    };
     [speed,reverb,bass,fadeIn,fadeOut,loop].forEach(input=>input.addEventListener('input',()=>{
       if (input === loop && audioBuffer) {
         if (loop.value === '0') { clipStart = 0; clipEnd = audioBuffer.duration; }
