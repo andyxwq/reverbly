@@ -32,7 +32,7 @@
         <div class="eyebrow">Your account</div>
         <h1>Sign in to see your plan.</h1>
         <p class="muted">Your exports and subscription status live here.</p>
-        <div class="actions"><a class="button" href="/reverbly-account">Sign in / Start trial</a><a class="button secondary" href="/reverbly-prototype">Open editor</a></div>
+        <div class="actions"><a class="button" href="/reverbly-account">Sign in</a><a class="button secondary" href="/reverbly-prototype">Open editor</a></div>
       </div>
       <div id="signedIn" class="hidden">
         <div class="eyebrow">Your account</div>
@@ -71,7 +71,7 @@
         speed: item.speed, reverb: item.reverb, fadeIn: item.fade_in,
         fadeOut: item.fade_out, loop: item.loop_seconds, clipStart: item.clip_start_seconds
       });
-      return 'reverbly-prototype.html?' + params;
+      return '/reverbly-prototype?' + params;
     }
 
     async function loadHistory() {
