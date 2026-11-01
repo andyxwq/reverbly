@@ -70,6 +70,13 @@
     .control label { display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; }
     .value { color:var(--pink); font-variant-numeric:tabular-nums; }
     input[type="range"] { width:100%; accent-color:var(--pink); }
+    .control input[type="range"] { -webkit-appearance:none; appearance:none; height:22px; margin:2px 0 0; background:transparent; cursor:pointer; }
+    .control input[type="range"]:disabled { cursor:not-allowed; opacity:.45; }
+    .control input[type="range"]::-webkit-slider-runnable-track { height:6px; border-radius:99px; background:linear-gradient(90deg,var(--pink),#c9a6ff) 0/var(--fill,40%) 100% no-repeat,#3a2e52; }
+    .control input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; margin-top:-6px; border-radius:50%; border:2px solid #1b102a; background:#fff4fb; box-shadow:0 0 0 4px #ff77c833; }
+    .control input[type="range"]::-moz-range-track { height:6px; border:0; border-radius:99px; background:#3a2e52; }
+    .control input[type="range"]::-moz-range-progress { height:6px; border-radius:99px; background:linear-gradient(90deg,var(--pink),#c9a6ff); }
+    .control input[type="range"]::-moz-range-thumb { width:18px; height:18px; border:2px solid #1b102a; border-radius:50%; background:#fff4fb; }
     .preview-panel { padding:18px; }
     .preview-panel h2 { margin-bottom:2px; }
     .wave-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
@@ -340,7 +347,8 @@
     let zoomLevel = 1, historyStack = [], historyIndex = -1;
     const historySettings = new URLSearchParams(location.search);
     const formatTime = seconds => `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(Math.floor(seconds % 60)).padStart(2,'0')}`;
-    function updateLabels() { if (pitchValue && pitch) { const semis = Number(pitch.value); pitchValue.textContent = (semis > 0 ? '+' : '') + semis + ' st'; } speedValue.textContent = `${Number(speed.value).toFixed(2)}×`; reverbValue.textContent = `${reverb.value}%`; if (bassValue) bassValue.textContent = `${bass.value} dB`; fadeInValue.textContent = `${Number(fadeIn.value).toFixed(1)}s`; fadeOutValue.textContent = `${Number(fadeOut.value).toFixed(1)}s`; loopValue.textContent = loop.value === '0' ? 'Full audio' : `${loop.value} seconds`; clipEndValue.textContent = loop.value === '0' ? 'End of file' : formatTime(previewEnd()); drawWave(); }
+    function paintSliders() { document.querySelectorAll('.control input[type="range"]').forEach((input) => { const min = Number(input.min), max = Number(input.max), value = Number(input.value); const pct = max === min ? 0 : ((value - min) / (max - min)) * 100; input.style.setProperty('--fill', pct + '%'); }); }
+    function updateLabels() { if (pitchValue && pitch) { const semis = Number(pitch.value); pitchValue.textContent = (semis > 0 ? '+' : '') + semis + ' st'; } speedValue.textContent = `${Number(speed.value).toFixed(2)}×`; reverbValue.textContent = `${reverb.value}%`; if (bassValue) bassValue.textContent = `${bass.value} dB`; fadeInValue.textContent = `${Number(fadeIn.value).toFixed(1)}s`; fadeOutValue.textContent = `${Number(fadeOut.value).toFixed(1)}s`; loopValue.textContent = loop.value === '0' ? 'Full audio' : `${loop.value} seconds`; clipEndValue.textContent = loop.value === '0' ? 'End of file' : formatTime(previewEnd()); paintSliders(); drawWave(); }
     function currentSnapshot() { return { speed:speed.value, reverb:reverb.value, bass:bass.value, keepPitch:keepPitch.checked, fadeIn:fadeIn.value, fadeOut:fadeOut.value, loop:loop.value, clipStart }; }
     function pushHistoryState() {
       const next = currentSnapshot();
