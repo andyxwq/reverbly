@@ -53,7 +53,8 @@
     .presets { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0 23px; }
     .preset { padding:13px; text-align:left; color:var(--ink); border:1px solid var(--line); border-radius:12px; background:var(--surface-2); }
     .preset.active { outline:2px solid var(--purple); border-color:transparent; background:#2c2146; }
-    .preset span { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+    .need { margin-left:6px; color:#8d849f; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    .need[hidden] { display:none !important; }
     .saved-presets { margin:0 0 23px; padding:15px; border:1px solid var(--line); border-radius:14px; background:#120e20; }
     .saved-presets-head { display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:10px; }
     .saved-presets h3 { margin:0; font-size:14px; }
@@ -211,8 +212,8 @@
             <button id="redoPreset" type="button">Redo</button>
           </div>
         </div>
-        <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><button id="abButton" class="ab-btn" type="button" disabled title="Compare dry original vs Reverbly effect">A/B original</button><span id="time" class="time">00:00 / 00:00</span></div></div>
-        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><div class="history-controls"><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button><button id="resetClip" class="secondary" type="button" disabled>Reset clip</button><button id="loudest15" class="secondary" type="button" disabled>Loudest 15s</button><button type="button" class="info" aria-label="What Loudest 15s does" data-hint="Finds the loudest 15 seconds, not the start of the song.">!</button></div></div>
+        <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><button id="abButton" class="ab-btn" type="button" disabled title="Compare dry original vs Reverbly effect">A/B original <small class="need">Plus</small></button><span id="time" class="time">00:00 / 00:00</span></div></div>
+        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><div class="history-controls"><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button><button id="resetClip" class="secondary" type="button" disabled>Reset clip</button><button id="loudest15" class="secondary" type="button" disabled>Loudest 15s <small class="need">Plus</small></button><button type="button" class="info" aria-label="What Loudest 15s does" data-hint="Finds the loudest 15 seconds, not the start of the song.">!</button></div></div>
       </section>
       </div>
       <div class="editor-column">
@@ -222,11 +223,11 @@
           <button class="preset active" type="button" data-speed="0.82" data-reverb="62" data-bass="6" data-loop="0" data-fade-in="0.25" data-fade-out="0.55" data-slug="slowed">Slowed + reverb<span>0.82× • atmospheric</span></button>
           <button class="preset" type="button" data-speed="1.18" data-reverb="0" data-bass="2" data-loop="0" data-slug="sped">Nightcore / sped up<span>1.18× • energetic</span></button>
           <button class="preset" type="button" data-speed="0.75" data-reverb="72" data-bass="8" data-loop="0" data-fade-in="0.4" data-fade-out="0.8" data-slug="daycore">Daycore / lo-fi<span>0.75× • dreamy</span></button>
-          <button class="preset" type="button" data-speed="1.05" data-reverb="28" data-bass="3" data-loop="8" data-slug="hook8">Reel hook 8s<span>tight opening</span></button>
-          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="15" data-slug="hook15">15 sec hook<span>your strongest opening</span></button>
-          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="30" data-slug="clip30">30 sec clip<span>ready for Shorts</span></button>
-          <button class="preset" type="button" data-speed="0.9" data-reverb="45" data-loop="0" data-mode="vibe" data-slug="vibe">Vibe room<span>soft low + reverb</span></button>
-          <button class="preset" type="button" data-speed="1" data-reverb="12" data-loop="0" data-mode="vocal" data-slug="vocal">Vocal forward<span>clearer presence</span></button>
+          <button class="preset" type="button" data-speed="1.05" data-reverb="28" data-bass="3" data-loop="8" data-slug="hook8" data-need="plus">Reel hook 8s<span>tight opening · Plus</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="15" data-slug="hook15" data-need="plus">15 sec hook<span>your strongest opening · Plus</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="0" data-bass="0" data-loop="30" data-slug="clip30" data-need="plus">30 sec clip<span>ready for Shorts · Plus</span></button>
+          <button class="preset" type="button" data-speed="0.9" data-reverb="45" data-loop="0" data-mode="vibe" data-slug="vibe" data-need="plus">Vibe room<span>soft low + reverb · Plus</span></button>
+          <button class="preset" type="button" data-speed="1" data-reverb="12" data-loop="0" data-mode="vocal" data-slug="vocal" data-need="plus">Vocal forward<span>clearer presence · Plus</span></button>
         </div>
         <section class="saved-presets" aria-labelledby="savedPresetsTitle">
           <div class="saved-presets-head"><h3 id="savedPresetsTitle">Your saved presets</h3><small>Pro and Trial</small></div>
@@ -237,18 +238,18 @@
       <section class="panel controls-panel">
         <h2>4. Fine-tune your export</h2><p class="muted">Adjust the effect, transitions and clip length.</p>
         <div class="control"><label for="speed">Speed <span id="speedValue" class="value">0.82×</span></label><input id="speed" type="range" min="0.6" max="1.4" step="0.01" value="0.82"></div>
-        <div class="control"><label for="pitch">Pitch <span id="pitchValue" class="value">0 st</span></label> <button type="button" class="info" aria-label="What pitch does" data-hint="Moves the tone up or down. Speed stays the same.">!</button><input id="pitch" type="range" min="-12" max="12" step="1" value="0"></div>
+        <div class="control"><label for="pitch">Pitch <span id="pitchValue" class="value">0 st</span> <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What pitch does" data-hint="Moves the tone up or down. Speed stays the same.">!</button><input id="pitch" type="range" min="-12" max="12" step="1" value="0"></div>
         <div class="control"><label for="reverb">Reverb <span id="reverbValue" class="value">58%</span></label><input id="reverb" type="range" min="0" max="100" step="1" value="58"></div>
-        <div class="control"><label for="reverbSpace">Reverb space</label> <button type="button" class="info" aria-label="What reverb space does" data-hint="Room or hall is the type of reverb. The percent above is how strong it is.">!</button>
+        <div class="control"><label for="reverbSpace">Reverb space <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What reverb space does" data-hint="Room or hall is the type of reverb. The percent above is how strong it is.">!</button>
           <select id="reverbSpace" style="margin-left:8px;border:1px solid #4a3e63;border-radius:8px;background:#211932;color:#f6f3ff;padding:6px 8px">
             <option value="room">Small room</option>
             <option value="hall" selected>Large hall</option>
           </select>
         </label></div>
-        <div class="control"><label for="bass">Bass boost <span id="bassValue" class="value">0 dB</span></label><input id="bass" type="range" min="0" max="12" step="1" value="0"></div>
-        <div class="opt"><label><input id="keepPitch" type="checkbox"> Keep original pitch when changing speed</label> <button type="button" class="info" aria-label="What keep pitch does" data-hint="Holds the original tone when you change speed.">!</button></div>
-        <div class="control"><label for="fadeIn">Fade in <span id="fadeInValue" class="value">0.0s</span></label><input id="fadeIn" type="range" min="0" max="5" step="0.1" value="0"></div>
-        <div class="control"><label for="fadeOut">Fade out <span id="fadeOutValue" class="value">0.0s</span></label><input id="fadeOut" type="range" min="0" max="5" step="0.1" value="0"></div>
+        <div class="control"><label for="bass">Bass boost <span id="bassValue" class="value">0 dB</span> <small class="need">Plus</small></label><input id="bass" type="range" min="0" max="12" step="1" value="0"></div>
+        <div class="opt"><label><input id="keepPitch" type="checkbox"> Keep original pitch when changing speed <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What keep pitch does" data-hint="Holds the original tone when you change speed.">!</button></div>
+        <div class="control"><label for="fadeIn">Fade in <span id="fadeInValue" class="value">0.0s</span> <small class="need">Plus</small></label><input id="fadeIn" type="range" min="0" max="5" step="0.1" value="0"></div>
+        <div class="control"><label for="fadeOut">Fade out <span id="fadeOutValue" class="value">0.0s</span> <small class="need">Plus</small></label><input id="fadeOut" type="range" min="0" max="5" step="0.1" value="0"></div>
         <div class="control"><label for="loop">Export length <span id="loopValue" class="value">Full audio</span></label><input id="loop" type="range" min="0" max="60" step="15" value="0"></div>
         <div class="export-meta">
           <div class="progress-track" aria-hidden="true"><div id="exportProgressBar" class="progress-bar"></div></div>
@@ -263,18 +264,18 @@
         </label></div>
         <div class="opt"><label><input id="optNormalize" type="checkbox" checked> Normalize loudness on export</label></div>
         <div class="opt"><label><input id="optTrim" type="checkbox"> Auto-trim silence at edges</label></div>
-        <div class="opt"><label><input id="optSeamless" type="checkbox"> Seamless loop (crossfade edges)</label></div>
+        <div class="opt"><label><input id="optSeamless" type="checkbox"> Seamless loop (crossfade edges) <small class="need">Plus</small></label></div>
         <div class="opt"><label><input id="optBrand" type="checkbox"> Add “made-with-reverbly” to filename</label></div>
         <div class="tool-row">
           <button id="shareSettings" class="secondary" type="button">Copy settings link</button>
-          <button id="batchExport" class="secondary" type="button">Export 3 versions</button>
+          <button id="batchExport" class="secondary" type="button">Export 3 versions <small class="need">Pro</small></button>
         </div>
         <div id="cloudBox" class="saved-presets" style="margin-top:14px">
-          <div class="saved-presets-head"><h3>Your cloud</h3><small id="cloudHint">Sign in to keep exports</small></div>
+          <div class="saved-presets-head"><h3>Your cloud</h3><small id="cloudHint">Pro</small></div>
           <div id="cloudList" class="saved-list"></div>
         </div>
         <div id="upsellBox" class="upsell" role="status"></div>
-        <button id="exportButton" class="export" type="button" disabled>Export WAV</button><button id="exportBoth" class="secondary" type="button" disabled style="width:100%;margin-top:8px">Export WAV + MP3</button><button type="button" class="info" aria-label="What export both does" data-hint="Downloads both files. The menu above downloads only the one you pick.">!</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
+        <button id="exportButton" class="export" type="button" disabled>Export WAV</button><button id="exportBoth" class="secondary" type="button" disabled style="width:100%;margin-top:8px">Export WAV + MP3 <small class="need">Plus</small></button><button type="button" class="info" aria-label="What export both does" data-hint="Downloads both files. The menu above downloads only the one you pick.">!</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
       </section>
       </div>
     </section>
@@ -313,6 +314,28 @@
     let processMode = 'normal', trialEndsAt = null;
     const reverblyAuth = window.reverblySupabaseClient;
     let context, audioBuffer, source, startedAt = 0, playOffset = 0, currentOffset = 0, clipStart = 0, clipEnd = 0, dragHandle = null, animation, savedPresets = [], currentPlan = 'free';
+    function planRank() { if (currentPlan === 'pro' || currentPlan === 'trialing') return 2; if (currentPlan === 'plus') return 1; return 0; }
+    function planAllows(level) { return planRank() >= (level === 'pro' ? 2 : 1); }
+    function explainPlan(level) { const name = level === 'pro' ? 'Pro' : 'Plus'; notice.textContent = name + ' includes this. Upgrade from Account.'; if (typeof showUpsell === 'function') showUpsell(name + ' includes this. <a href="/reverbly-account">See plans</a>'); }
+    function applyPlanLocks() {
+      const plus = planAllows('plus');
+      const pro = planAllows('pro');
+      document.querySelectorAll('.preset[data-need="plus"]').forEach((btn) => { btn.dataset.locked = plus ? '0' : '1'; });
+      ['pitch','reverbSpace','bass','keepPitch','fadeIn','fadeOut','optSeamless'].forEach((id) => { const el = document.getElementById(id); if (el) el.disabled = !plus; });
+      const loud = document.getElementById('loudest15');
+      if (loud) loud.disabled = !plus || !audioBuffer;
+      if (exportBoth) exportBoth.disabled = !plus || !audioBuffer;
+      if (abButton) abButton.disabled = !plus || !audioBuffer;
+      const batch = document.getElementById('batchExport');
+      if (batch) batch.disabled = !pro || !audioBuffer;
+      const presetNameEl = document.getElementById('presetName');
+      const savePresetEl = document.getElementById('savePreset');
+      if (presetNameEl) presetNameEl.disabled = !pro;
+      if (savePresetEl) savePresetEl.disabled = !pro;
+      const cloudHint = document.getElementById('cloudHint');
+      if (cloudHint) cloudHint.textContent = pro ? 'Your Pro copies' : 'Pro';
+      document.querySelectorAll('.need').forEach((el) => { el.hidden = (el.textContent.trim() === 'Pro') ? pro : plus; });
+    }
     let pitchCacheBuffer = null, pitchCacheSemis = null, pitchCacheSource = null;
     let zoomLevel = 1, historyStack = [], historyIndex = -1;
     const historySettings = new URLSearchParams(location.search);
@@ -377,13 +400,13 @@
         if (s.loop != null) loop.value = s.loop;
       } catch (_) {}
     }
-    async function saveExportHistory(blob, outputName) { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) return { stored:false, signedIn:false }; const originalName=fileName.textContent.replace(/^✓\s*/,'') || 'audio'; const activePreset=document.querySelector('.preset.active'); const preset=activePreset ? activePreset.childNodes[0].textContent.trim() : 'Custom'; const cloudExt = blob.type === 'audio/mpeg' ? 'mp3' : 'wav'; const cloudType = cloudExt === 'mp3' ? 'audio/mpeg' : 'audio/wav'; const path=`${session.user.id}/${crypto.randomUUID()}.${cloudExt}`; const {error:uploadError}=await reverblyAuth.storage.from('exports').upload(path,blob,{contentType:cloudType,upsert:false}); const {error}=await reverblyAuth.from('exports').insert({user_id:session.user.id,original_name:originalName,output_name:outputName,preset,speed:Number(speed.value),reverb:Number(reverb.value),loop_seconds:Number(loop.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),clip_start_seconds:clipStart,storage_path:uploadError ? null : path}); if(uploadError) console.warn('Export file was not stored.',uploadError.message); if(error) { console.warn('Export history was not saved.',error.message); notice.textContent=(notice.textContent||'')+' History save failed — download still worked.'; } return { stored: !uploadError && !error, signedIn: true }; }
+    async function saveExportHistory(blob, outputName) { const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) return { stored:false, signedIn:false }; if(!planAllows('pro')) return { stored:false, signedIn:true }; const originalName=fileName.textContent.replace(/^✓\s*/,'') || 'audio'; const activePreset=document.querySelector('.preset.active'); const preset=activePreset ? activePreset.childNodes[0].textContent.trim() : 'Custom'; const cloudExt = blob.type === 'audio/mpeg' ? 'mp3' : 'wav'; const cloudType = cloudExt === 'mp3' ? 'audio/mpeg' : 'audio/wav'; const path=`${session.user.id}/${crypto.randomUUID()}.${cloudExt}`; const {error:uploadError}=await reverblyAuth.storage.from('exports').upload(path,blob,{contentType:cloudType,upsert:false}); const {error}=await reverblyAuth.from('exports').insert({user_id:session.user.id,original_name:originalName,output_name:outputName,preset,speed:Number(speed.value),reverb:Number(reverb.value),loop_seconds:Number(loop.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),clip_start_seconds:clipStart,storage_path:uploadError ? null : path}); if(uploadError) console.warn('Export file was not stored.',uploadError.message); if(error) { console.warn('Export history was not saved.',error.message); notice.textContent=(notice.textContent||'')+' History save failed — download still worked.'; } return { stored: !uploadError && !error, signedIn: true }; }
     function applySavedPreset(preset) { stop(); speed.value=preset.speed; reverb.value=preset.reverb; fadeIn.value=preset.fade_in; fadeOut.value=preset.fade_out; loop.value=preset.loop_seconds; if(audioBuffer) { clipStart=0; refreshClipStart(); setPosition(clipStart); } updateLabels(); notice.textContent=`"${preset.name}" is ready to preview.`; pushHistoryState(); }
     function renderSavedPresets(message) { savedPresetList.replaceChildren(); if(message) { const text=document.createElement('small'); text.textContent=message; savedPresetList.append(text); return; } savedPresets.forEach(preset=>{ const row=document.createElement('div'), use=document.createElement('button'), remove=document.createElement('button'); row.className='saved-item'; use.type='button'; use.textContent=preset.name; use.title=`${Number(preset.speed).toFixed(2)}x, ${preset.reverb}% reverb`; use.onclick=()=>applySavedPreset(preset); remove.type='button'; remove.textContent='×'; remove.title=`Delete ${preset.name}`; remove.setAttribute('aria-label',`Delete ${preset.name}`); remove.onclick=()=>deleteSavedPreset(preset.id); row.append(use,remove); savedPresetList.append(row); }); }
-    async function loadSavedPresets() { const planPill=document.getElementById('planPill'); const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { currentPlan='free'; trialEndsAt=null; updateTrialBanner(); if(planPill){planPill.hidden=false;planPill.textContent='Free';} renderSavedPresets('Sign in with Pro or Trial to save presets.'); return; } const {data:profile}=await reverblyAuth.from('profiles').select('plan').eq('id',session.user.id).maybeSingle(); currentPlan=profile?.plan || 'free'; if(planPill){planPill.hidden=false;planPill.textContent=currentPlan==='trialing'?'Trial':currentPlan==='pro'?'Pro':currentPlan==='plus'?'Plus':'Free';}
+    async function loadSavedPresets() { const planPill=document.getElementById('planPill'); const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { currentPlan='free'; trialEndsAt=null; updateTrialBanner(); if(planPill){planPill.hidden=false;planPill.textContent='Free';} renderSavedPresets('Sign in with Pro or Trial to save presets.'); applyPlanLocks(); return; } const {data:profile}=await reverblyAuth.from('profiles').select('plan').eq('id',session.user.id).maybeSingle(); currentPlan=profile?.plan || 'free'; if(planPill){planPill.hidden=false;planPill.textContent=currentPlan==='trialing'?'Trial':currentPlan==='pro'?'Pro':currentPlan==='plus'?'Plus':'Free';}
       const {data:sub}=await reverblyAuth.from('subscriptions').select('trial_ends_at,status').eq('user_id',session.user.id).maybeSingle();
       trialEndsAt = sub?.trial_ends_at || null;
-      updateTrialBanner(); if(!canSavePresets()) { renderSavedPresets('Available with Reverbly Pro or Trial.'); return; } const {data,error}=await reverblyAuth.from('saved_presets').select('id,name,speed,reverb,fade_in,fade_out,loop_seconds').order('created_at',{ascending:false}); savedPresets=data || []; renderSavedPresets(error ? 'Could not load presets yet. Run the saved-presets SQL migration.' : savedPresets.length ? '' : 'Save your first custom preset.'); }
+      updateTrialBanner(); if(!canSavePresets()) { renderSavedPresets('Available with Reverbly Pro or Trial.'); applyPlanLocks(); return; } const {data,error}=await reverblyAuth.from('saved_presets').select('id,name,speed,reverb,fade_in,fade_out,loop_seconds').order('created_at',{ascending:false}); savedPresets=data || []; renderSavedPresets(error ? 'Could not load presets yet. Run the saved-presets SQL migration.' : savedPresets.length ? '' : 'Save your first custom preset.'); applyPlanLocks(); }
     async function saveCurrentPreset() { const name=presetName.value.trim(); if(!name) { notice.textContent='Give your preset a name first.'; presetName.focus(); return; } const {data:{session}}=await reverblyAuth.auth.getSession(); if(!session) { notice.textContent='Sign in, then start a Trial or Pro plan to save presets.'; return; } if(!canSavePresets()) { notice.textContent='Saved presets are available with Reverbly Pro or Trial.'; return; } savePreset.disabled=true; const {data,error}=await reverblyAuth.from('saved_presets').insert({user_id:session.user.id,name,speed:Number(speed.value),reverb:Number(reverb.value),fade_in:Number(fadeIn.value),fade_out:Number(fadeOut.value),loop_seconds:Number(loop.value)}).select('id,name,speed,reverb,fade_in,fade_out,loop_seconds').single(); savePreset.disabled=false; if(error) { notice.textContent='Could not save yet. Make sure the saved-presets SQL migration has run.'; return; } savedPresets.unshift(data); presetName.value=''; renderSavedPresets(); notice.textContent=`"${data.name}" was saved to your account.`; }
     async function deleteSavedPreset(id) { const {error}=await reverblyAuth.from('saved_presets').delete().eq('id',id); if(error) { notice.textContent='Could not delete this preset. Please try again.'; return; } savedPresets=savedPresets.filter(preset=>preset.id!==id); renderSavedPresets(savedPresets.length ? '' : 'Save your first custom preset.'); }
     function drawWave(progress = 0) {
@@ -548,7 +571,7 @@
     function stop(reset=true) { if(source){ source.onended=null; source.stop(); source.disconnect(); source=null; } cancelAnimationFrame(animation); if(reset) currentOffset=clipStart; playButton.textContent='▶ Play'; setPosition(currentOffset); }
     function tick(playRate) { if(!source || !context) return; const rate = playRate != null ? playRate : (abOriginal ? 1 : Number(speed.value)); const elapsed=(context.currentTime-startedAt)*rate+playOffset, end=previewEnd(); setPosition(Math.min(elapsed,end)); if(elapsed<end) animation=requestAnimationFrame(function(){ tick(rate); }); }
     function play() { if(!audioBuffer) return; if(!context) context=new AudioContext(); if(context.state==='suspended') context.resume(); if(source){ stop(false); return; } const end=previewEnd(); if(currentOffset>=end) currentOffset=clipStart; playOffset=currentOffset; source=graph(context,context.destination,currentOffset); source.onended=()=>stop(true); startedAt=context.currentTime; const playRate = abOriginal ? 1 : Number(speed.value); source.start(0,currentOffset, Math.max(0.05, (end-currentOffset))); playButton.textContent='■ Pause'; tick(playRate); }
-    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = (currentPlan === 'pro' || currentPlan === 'trialing' || currentPlan === 'plus') ? 80 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = currentPlan === 'free' ? 'Free plan supports files up to 20 MB. Start a trial for larger files.' : 'This file is too large (max 80 MB).'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = (currentPlan === 'pro' || currentPlan === 'trialing' || currentPlan === 'plus') ? 20 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = currentPlan === 'free' ? 'Free plan supports clips up to 5 minutes. Start a trial for longer audio.' : 'This clip is longer than the 20 minute limit.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; if(abButton) abButton.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart'));
+    async function load(file) { if(!file || !file.type.startsWith('audio/')) { notice.textContent='Please choose a supported audio file.'; return; } const maxBytes = planRank() >= 2 ? 80 * 1024 * 1024 : planRank() >= 1 ? 40 * 1024 * 1024 : 20 * 1024 * 1024; if (file.size > maxBytes) { notice.textContent = planRank() >= 2 ? 'This file is too large (max 80 MB).' : planRank() === 1 ? 'Plus supports files up to 40 MB. Pro allows 80 MB.' : 'Free plan supports files up to 20 MB. Plus allows 40 MB.'; return; } stop(); notice.textContent='Preparing your audio…'; const ac=new AudioContext(); try { audioBuffer=await ac.decodeAudioData(await file.arrayBuffer()); await ac.close(); if (optTrim && optTrim.checked) audioBuffer = trimSilence(audioBuffer); const maxSeconds = planRank() >= 2 ? 20 * 60 : planRank() >= 1 ? 10 * 60 : 5 * 60; if (audioBuffer.duration > maxSeconds) { audioBuffer = null; notice.textContent = planRank() >= 2 ? 'This clip is longer than the 20 minute limit.' : planRank() === 1 ? 'Plus supports clips up to 10 minutes. Pro allows 20.' : 'Free plan supports clips up to 5 minutes. Plus allows 10.'; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=true; if(abButton) abButton.disabled=true; drawWave(); return; } const requestedClipStart=Number(historySettings.get('clipStart'));
       clipStart = 0;
       clipEnd = audioBuffer.duration;
       if (loop.value !== '0' && Number.isFinite(Number(loop.value))) {
@@ -558,7 +581,7 @@
       } else if (Number.isFinite(requestedClipStart) && requestedClipStart > 0) {
         clipStart = Math.max(0, Math.min(requestedClipStart, audioBuffer.duration - 0.05));
       }
-      fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; if(exportBoth) exportBoth.disabled=false; if(abButton) abButton.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
+      fileName.textContent=`✓ ${file.name}`; playButton.disabled=stopButton.disabled=exportButton.disabled=seek.disabled=false; if(exportBoth) exportBoth.disabled=false; if(abButton) abButton.disabled=false; refreshClipStart(); notice.textContent='Ready to preview and export.'; if (window.reverblySetEditorStep) window.reverblySetEditorStep(2); setPosition(clipStart); if (window.reverblyTrack) window.reverblyTrack('audio_loaded', { plan: currentPlan }); applyPlanLocks(); } catch { notice.textContent='This file could not be decoded. Try MP3 or WAV.'; } }
 
     function updateTrialBanner() {
       if (!trialBanner) return;
@@ -943,7 +966,7 @@
       }
       pushHistoryState(); saveLastSettings(); updateLabels(); refreshClipStart();
       if (audioBuffer) setPosition(Math.min(Math.max(currentOffset, clipStart), previewEnd()));
-    })); if(keepPitch) keepPitch.addEventListener('change',()=>{pushHistoryState(); saveLastSettings(); if(source){stop(false); play();} }); if(pitch) pitch.addEventListener('input',()=>{ updateLabels(); pushHistoryState(); saveLastSettings(); if(source){stop(false); play();} }); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;if(pitch)pitch.value='0';if(btn.dataset.bass!=null)bass.value=btn.dataset.bass;loop.value=btn.dataset.loop;if(btn.dataset.fadeIn!=null)fadeIn.value=btn.dataset.fadeIn;if(btn.dataset.fadeOut!=null)fadeOut.value=btn.dataset.fadeOut;processMode=btn.dataset.mode||'normal';if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));pushHistoryState(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event) {
+    })); if(keepPitch) keepPitch.addEventListener('change',()=>{pushHistoryState(); saveLastSettings(); if(source){stop(false); play();} }); if(pitch) pitch.addEventListener('input',()=>{ updateLabels(); pushHistoryState(); saveLastSettings(); if(source){stop(false); play();} }); document.querySelectorAll('.preset').forEach(btn=>btn.onclick=()=>{ if (btn.dataset.need === 'plus' && !planAllows('plus')) { explainPlan('plus'); return; }document.querySelectorAll('.preset').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const previousPosition=currentOffset;speed.value=btn.dataset.speed;reverb.value=btn.dataset.reverb;if(pitch)pitch.value='0';if(btn.dataset.bass!=null)bass.value=btn.dataset.bass;loop.value=btn.dataset.loop;if(btn.dataset.fadeIn!=null)fadeIn.value=btn.dataset.fadeIn;if(btn.dataset.fadeOut!=null)fadeOut.value=btn.dataset.fadeOut;processMode=btn.dataset.mode||'normal';if(audioBuffer&&loop.value!=='0')clipStart=Math.min(previousPosition,audioBuffer.duration-Number(loop.value));pushHistoryState(); updateLabels();refreshClipStart();if(audioBuffer)setPosition(clipStart);}); seek.oninput=()=>{if(source)stop(false);setPosition(clipStart+clipLength()*Number(seek.value)/100);}; function pointAt(event) {
       const rect = canvas.getBoundingClientRect();
       return Math.max(0, Math.min(audioBuffer.duration, (event.clientX - rect.left) / rect.width * audioBuffer.duration));
     }
@@ -1020,6 +1043,7 @@
       return bestStart / sr;
     }
     if (loudest15) loudest15.onclick = () => {
+      if (!planAllows('plus')) { explainPlan('plus'); return; }
       if (!audioBuffer) { notice.textContent = 'Upload audio first.'; return; }
       stop();
       const seconds = Math.min(15, audioBuffer.duration);
@@ -1050,7 +1074,7 @@
         abButton.click();
       }
     });
-    playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=()=>exportWav(false); if(exportBoth) exportBoth.onclick=()=>exportWav(true);
+    playButton.onclick=play;stopButton.onclick=stop;exportButton.onclick=()=>exportWav(false); if(exportBoth) exportBoth.onclick=()=>{ if(!planAllows('plus')) { explainPlan('plus'); return; } exportWav(true); };
     document.querySelectorAll('button.info').forEach((btn) => btn.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -1060,6 +1084,7 @@
     }));
     if (abButton) {
       abButton.onclick = function () {
+        if (!planAllows('plus')) { explainPlan('plus'); return; }
         if (!audioBuffer) return;
         abOriginal = !abOriginal;
         abButton.classList.toggle('active', abOriginal);
@@ -1081,9 +1106,9 @@
     };
     batchExport.onclick = async () => {
       if (!audioBuffer) { notice.textContent = 'Upload audio first.'; return; }
-      if (!(currentPlan === 'pro' || currentPlan === 'trialing' || currentPlan === 'plus')) {
-        showUpsell('Batch export (3 versions) is available on Plus, Trial and Pro.');
-        notice.textContent = 'Batch export needs Plus, Trial or Pro.';
+      if (!(currentPlan === 'pro' || currentPlan === 'trialing')) {
+        explainPlan('pro');
+        notice.textContent = 'Three versions in one export is included in Pro.';
         return;
       }
       const versions = [
