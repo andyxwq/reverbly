@@ -4,7 +4,7 @@
     anonKey: 'sb_publishable_mKbX82lncbniQINpMLRrHQ_lZ7AJnCU',
     // Stripe Payment Links (create in Stripe Dashboard → Payment Links)
     // Pro €7.99/mo with 7-day trial:
-    stripeTrialLink: 'https://buy.stripe.com/28EbIT48L0SP8nV4TL7EQ00',
+    stripeTrialLink: 'https://buy.stripe.com/9B6dR1eNpcBxaw35XP7EQ01',
     // Plus €3.99/mo (no trial) — set when the Plus product exists:
     stripePlusLink: '',
     // Optional: Supabase Edge Function that creates a Stripe Customer Portal session.
