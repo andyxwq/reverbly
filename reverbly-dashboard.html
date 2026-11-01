@@ -187,11 +187,11 @@
       } else if (subscription?.status === 'canceled' || subscription?.status === 'past_due') {
         subscriptionNote.textContent = 'Subscription status: ' + subscription.status + '. You can start a new trial when ready.';
       } else {
-        subscriptionNote.textContent = 'You are on the Free plan (1 export per day). Get Plus (€3.99) for unlimited exports, or try Pro (€7.99).';
+        subscriptionNote.textContent = 'You are on the Free plan (1 export per day). Plus (€3.99) opens the full editor. Pro (€7.99) removes the limits.';
         const compare = document.getElementById('planCompare');
         if (compare) {
           compare.classList.remove('hidden');
-          compare.innerHTML = '<strong>Free · Plus · Pro</strong><br>Free: 1 export/day · Plus (€3.99): unlimited + history · Pro (€7.99): Plus + saved presets, higher limits, 7-day trial.';
+          compare.innerHTML = '<strong>Free · Plus · Pro</strong><br>Free: slowed, sped up, daycore, 1 export/day · Plus (€3.99): full editor · Pro (€7.99): unlimited exports, cloud, saved presets, 7-day trial.';
         }
       }
       loadHistory();
