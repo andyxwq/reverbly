@@ -16,6 +16,12 @@ async function isValidStripeSignature(body: string, signature: string | null, se
   return hex(digest) === values.v1
 }
 
+function periodEnd(subscription: Record<string, unknown>) {
+  if (subscription.current_period_end) return subscription.current_period_end
+  const items = (subscription.items as { data?: { current_period_end?: number }[] } | undefined)?.data ?? []
+  return items[0]?.current_period_end ?? null
+}
+
 function planFor(subscription: Record<string, unknown>) {
   const status = String(subscription.status)
   if (status === 'canceled' || status === 'incomplete_expired' || status === 'unpaid' || status === 'paused') return 'free'
@@ -55,7 +61,7 @@ async function saveSubscription(supabase: ReturnType<typeof createClient>, userI
     stripe_subscription_id: String(subscription.id),
     status,
     trial_ends_at: subscription.trial_end ? new Date(Number(subscription.trial_end) * 1000).toISOString() : null,
-    current_period_ends_at: subscription.current_period_end ? new Date(Number(subscription.current_period_end) * 1000).toISOString() : null,
+    current_period_ends_at: periodEnd(subscription) ? new Date(Number(periodEnd(subscription)) * 1000).toISOString() : null,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' })
   if (error) throw error
