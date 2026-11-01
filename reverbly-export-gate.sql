@@ -38,19 +38,19 @@ begin
     update public.profiles
     set export_date = current_date, export_count = 1, updated_at = now()
     where id = auth.uid();
-    return query select true, 'free'::text, 'Your free export for today is ready.';
+    return query select true, 'free'::text, 'Free export ready. You can export 3 times a day.';
     return;
   end if;
 
-  if profile_row.export_count < 1 then
+  if profile_row.export_count < 3 then
     update public.profiles
     set export_count = export_count + 1, updated_at = now()
     where id = auth.uid();
-    return query select true, 'free'::text, 'Your free export for today is ready.';
+    return query select true, 'free'::text, 'Free export ready. You can export 3 times a day.';
     return;
   end if;
 
-  return query select false, 'free'::text, 'Your free export has been used for today. Start a trial for unlimited exports.';
+  return query select false, 'free'::text, 'You have used today''s 3 free exports. Pro removes the daily limit.';
 end;
 $$;
 
@@ -81,7 +81,7 @@ begin
 
     get diagnostics inserted_row_count = ROW_COUNT;
     if inserted_row_count = 1 then
-      return query select true, 'free'::text, 'Your free export is ready.';
+      return query select true, 'free'::text, 'Free export ready. You can export 3 times a day.';
       return;
     end if;
 
@@ -95,19 +95,19 @@ begin
     update public.anonymous_export_usage
     set export_date = current_date, export_count = 1, updated_at = now()
     where id = p_client_id;
-    return query select true, 'free'::text, 'Your free export is ready.';
+    return query select true, 'free'::text, 'Free export ready. You can export 3 times a day.';
     return;
   end if;
 
-  if usage_row.export_count < 1 then
+  if usage_row.export_count < 3 then
     update public.anonymous_export_usage
     set export_count = export_count + 1, updated_at = now()
     where id = p_client_id;
-    return query select true, 'free'::text, 'Your free export is ready.';
+    return query select true, 'free'::text, 'Free export ready. You can export 3 times a day.';
     return;
   end if;
 
-  return query select false, 'free'::text, 'Your free export for today has been used. Create an account to start a trial with unlimited exports.';
+  return query select false, 'free'::text, 'You have used today''s 3 free exports. Create an account and try Pro for unlimited exports.';
 end;
 $$;
 
