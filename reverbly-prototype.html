@@ -86,8 +86,9 @@
     .transport { display:flex; align-items:center; gap:10px; margin-top:13px; }
     .play { min-width:96px; color:#190f2a; background:var(--green); }
     .secondary { color:var(--ink); background:#302643; border:1px solid #4a3e63; }
-    button.info, .history-controls button.info { min-width:22px; width:22px; height:22px; padding:0; border-radius:99px; font-size:12px; line-height:1; }
-    .hint { flex-basis:100%; margin:4px 0 0; color:var(--muted); font-size:12px; line-height:1.4; }
+    button.info, .history-controls button.info { position:relative; min-width:22px; width:22px; height:22px; padding:0; border-radius:99px; font-size:12px; line-height:1; }
+    button.info::after { content:attr(data-hint); position:absolute; left:0; top:calc(100% + 6px); width:max-content; max-width:230px; padding:8px 10px; border:1px solid #4a3e63; border-radius:10px; background:#2a2140; color:#f6f3ff; font-size:12px; font-weight:500; line-height:1.4; text-align:left; white-space:normal; z-index:30; pointer-events:none; opacity:0; visibility:hidden; }
+    button.info:hover::after, button.info:focus-visible::after, button.info.show::after { opacity:1; visibility:visible; }
     .time { margin-left:auto; color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
     .export-meta { margin-top:14px; }
     .export-progress { margin:10px 0 0; }
@@ -1052,16 +1053,9 @@
     document.querySelectorAll('button.info').forEach((btn) => btn.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      let note = btn.nextElementSibling;
-      if (!note || !note.classList.contains('hint')) {
-        note = document.createElement('p');
-        note.className = 'hint';
-        note.hidden = true;
-        btn.after(note);
-      }
-      const open = !note.hidden;
-      document.querySelectorAll('.hint').forEach((item) => { item.hidden = true; });
-      if (!open) { note.textContent = btn.dataset.hint; note.hidden = false; }
+      const open = btn.classList.contains('show');
+      document.querySelectorAll('button.info.show').forEach((item) => item.classList.remove('show'));
+      if (!open) btn.classList.add('show');
     }));
     if (abButton) {
       abButton.onclick = function () {
