@@ -16,7 +16,15 @@ async function isValidStripeSignature(body: string, signature: string | null, se
   return hex(digest) === values.v1
 }
 
-function planFor(status: string) {
+function planFor(subscription: Record<string, unknown>) {
+  const status = String(subscription.status)
+  if (status === 'canceled' || status === 'incomplete_expired' || status === 'unpaid' || status === 'paused') return 'free'
+  const items = (subscription.items as { data?: { price?: { id?: string } }[] } | undefined)?.data ?? []
+  const priceId = items[0]?.price?.id ?? ''
+  const plusId = Deno.env.get('STRIPE_PLUS_PRICE_ID') ?? ''
+  const proId = Deno.env.get('STRIPE_PRO_PRICE_ID') ?? ''
+  if (plusId && priceId === plusId) return 'plus'
+  if (proId && priceId === proId) return status === 'trialing' ? 'trialing' : 'pro'
   if (status === 'trialing') return 'trialing'
   if (status === 'active') return 'pro'
   return 'free'
@@ -51,7 +59,7 @@ async function saveSubscription(supabase: ReturnType<typeof createClient>, userI
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' })
   if (error) throw error
-  const result = await supabase.from('profiles').update({ plan: planFor(status), updated_at: new Date().toISOString() }).eq('id', userId)
+  const result = await supabase.from('profiles').update({ plan: planFor(subscription), updated_at: new Date().toISOString() }).eq('id', userId)
   if (result.error) throw result.error
 }
 
