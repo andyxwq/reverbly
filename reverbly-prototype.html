@@ -208,7 +208,7 @@
           </div>
         </div>
         <div class="wave-wrap"><canvas id="waveform" width="640" height="200" aria-label="Audio waveform"></canvas><input id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Preview position"><div class="transport"><button id="playButton" class="play" type="button" disabled>▶ Play</button><button id="stopButton" class="secondary" type="button" disabled>Stop</button><button id="abButton" class="ab-btn" type="button" disabled title="Compare dry original vs Reverbly effect">A/B original</button><span id="time" class="time">00:00 / 00:00</span></div></div>
-        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><div class="history-controls"><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button><button id="resetClip" class="secondary" type="button" disabled>Reset clip</button></div></div>
+        <div class="preview-clip-action"><span>Clip starts at <span id="clipStartValue" class="value">00:00</span></span><span>Range ends at <span id="clipEndValue" class="value">00:00</span></span><div class="history-controls"><button id="setClipStart" class="secondary" type="button" disabled>Use current preview position</button><button id="resetClip" class="secondary" type="button" disabled>Reset clip</button><button id="loudest15" class="secondary" type="button" disabled>Loudest 15s</button></div></div>
       </section>
       </div>
       <div class="editor-column">
@@ -234,6 +234,12 @@
         <h2>4. Fine-tune your export</h2><p class="muted">Adjust the effect, transitions and clip length.</p>
         <div class="control"><label for="speed">Speed <span id="speedValue" class="value">0.82×</span></label><input id="speed" type="range" min="0.6" max="1.4" step="0.01" value="0.82"></div>
         <div class="control"><label for="reverb">Reverb <span id="reverbValue" class="value">58%</span></label><input id="reverb" type="range" min="0" max="100" step="1" value="58"></div>
+        <div class="control"><label for="reverbSpace">Reverb space
+          <select id="reverbSpace" style="margin-left:8px;border:1px solid #4a3e63;border-radius:8px;background:#211932;color:#f6f3ff;padding:6px 8px">
+            <option value="room">Small room</option>
+            <option value="hall" selected>Large hall</option>
+          </select>
+        </label></div>
         <div class="control"><label for="bass">Bass boost <span id="bassValue" class="value">0 dB</span></label><input id="bass" type="range" min="0" max="12" step="1" value="0"></div>
         <div class="opt"><label><input id="keepPitch" type="checkbox"> Keep original pitch when changing speed</label></div>
         <div class="control"><label for="fadeIn">Fade in <span id="fadeInValue" class="value">0.0s</span></label><input id="fadeIn" type="range" min="0" max="5" step="0.1" value="0"></div>
@@ -404,17 +410,19 @@
     }
     function impulse(ac, amount) {
       const amount01 = Math.max(0, Math.min(1, Number(amount) / 100));
-      const seconds = 0.55 + amount01 * 3.6;
+      const space = (document.getElementById('reverbSpace') || {}).value || 'hall';
+      const room = space === 'room';
+      const seconds = room ? (0.28 + amount01 * 0.9) : (0.85 + amount01 * 3.5);
       const length = Math.max(1, Math.floor(ac.sampleRate * seconds));
       const buffer = ac.createBuffer(2, length, ac.sampleRate);
-      const reflections = [
-        [0.011, 0.42], [0.023, 0.30], [0.037, 0.20], [0.055, 0.14], [0.078, 0.09]
-      ];
+      const reflections = room
+        ? [[0.006, 0.62], [0.012, 0.46], [0.02, 0.3], [0.031, 0.16]]
+        : [[0.021, 0.26], [0.046, 0.18], [0.084, 0.11], [0.13, 0.07]];
       for (let c = 0; c < 2; c++) {
         const d = buffer.getChannelData(c);
         let lp = 0;
         const damp = 0.12 + amount01 * 0.28;
-        const decay = 1.6 + (1 - amount01) * 3.2;
+        const decay = room ? (5.4 + (1 - amount01) * 2.2) : (1.05 + (1 - amount01) * 1.1);
         for (let i = 0; i < length; i++) {
           const t = i / ac.sampleRate;
           let noise = Math.random() * 2 - 1;
@@ -492,7 +500,7 @@
       clipStartValue.textContent = full ? 'Beginning' : formatTime(clipStart);
       clipEndValue.textContent = full ? 'End of file' : formatTime(previewEnd());
       if (setClipStart) setClipStart.disabled = !audioBuffer;
-      if (resetClip) resetClip.disabled = !audioBuffer;
+      if (resetClip) resetClip.disabled = !audioBuffer; const loudest15 = document.getElementById('loudest15'); if (loudest15) loudest15.disabled = !audioBuffer;
       if (audioBuffer) drawWave(currentOffset / audioBuffer.duration);
     }
     function setPosition(seconds) { if(!audioBuffer) return; currentOffset=Math.max(clipStart,Math.min(seconds,previewEnd())); seek.value=String(clipLength() ? (currentOffset-clipStart)/clipLength()*100 : 0); time.textContent=`${formatTime(currentOffset)} / ${formatTime(previewEnd())}`; drawWave(currentOffset/audioBuffer.duration); }
@@ -639,7 +647,7 @@
       }
       updateProgress(20, 'Rendering audio…');
       notice.textContent = 'Rendering ' + formatTime(clipStart) + ' → ' + formatTime(previewEnd()) + (optSeamless && optSeamless.checked ? ' (seamless)' : '') + '…';
-      const rate = Number(speed.value), reverbAmt = Math.max(0, Math.min(1, Number(reverb.value)/100)), tailSec = reverbAmt > 0.02 ? (0.55 + reverbAmt * 3.6) * 0.9 : 0, length = Math.ceil((clipLength() / rate + tailSec) * audioBuffer.sampleRate);
+      const rate = Number(speed.value), reverbAmt = Math.max(0, Math.min(1, Number(reverb.value)/100)), reverbSpace = (document.getElementById('reverbSpace') || {}).value || 'hall', tailBase = reverbSpace === 'room' ? 0.28 : 0.85, tailSpan = reverbSpace === 'room' ? 0.9 : 3.5, tailSec = reverbAmt > 0.02 ? (tailBase + reverbAmt * tailSpan) * 0.9 : 0, length = Math.ceil((clipLength() / rate + tailSec) * audioBuffer.sampleRate);
       const offline = new OfflineAudioContext(2, length, audioBuffer.sampleRate);
       const src = graph(offline, offline.destination);
       src.start(0, clipStart, clipLength());
@@ -935,7 +943,39 @@
       canvas.style.cursor = 'crosshair';
     };
     canvas.onpointercancel = canvas.onpointerup;
-    setClipStart.onclick=()=>{if(!audioBuffer)return;clipStart=Math.min(currentOffset, (clipEnd||audioBuffer.duration)-0.05);refreshClipStart();syncLoopFromRegion();setPosition(clipStart);notice.textContent=`Clip: ${formatTime(clipStart)} → ${formatTime(previewEnd())}`;}; resetClip.onclick=()=>{if(!audioBuffer) return; clipStart=0; clipEnd=audioBuffer.duration; loop.value='0'; updateLabels(); refreshClipStart(); setPosition(0); notice.textContent='Clip reset to full audio. Drag the pink handles on the waveform to trim.';}; zoomIn.onclick=()=>adjustZoom('in'); zoomOut.onclick=()=>adjustZoom('out'); undoPreset.onclick=()=>restoreHistory('undo'); redoPreset.onclick=()=>restoreHistory('redo'); document.addEventListener('keydown', event => {      const isTyping = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+    setClipStart.onclick=()=>{if(!audioBuffer)return;clipStart=Math.min(currentOffset, (clipEnd||audioBuffer.duration)-0.05);refreshClipStart();syncLoopFromRegion();setPosition(clipStart);notice.textContent=`Clip: ${formatTime(clipStart)} → ${formatTime(previewEnd())}`;}; resetClip.onclick=()=>{if(!audioBuffer) return; clipStart=0; clipEnd=audioBuffer.duration; loop.value='0'; updateLabels(); refreshClipStart(); setPosition(0); notice.textContent='Clip reset to full audio. Drag the pink handles on the waveform to trim.';};
+    const loudest15 = document.getElementById('loudest15');
+    function findLoudestStart(seconds) {
+      const data = audioBuffer.getChannelData(0);
+      const sr = audioBuffer.sampleRate;
+      const win = Math.min(data.length, Math.floor(seconds * sr));
+      if (data.length <= win + 1) return 0;
+      const hop = Math.max(1, Math.floor(sr * 0.25));
+      const step = 160;
+      let best = -1, bestStart = 0;
+      for (let start = 0; start + win <= data.length; start += hop) {
+        let energy = 0;
+        for (let i = start; i < start + win; i += step) energy += data[i] * data[i];
+        if (energy > best) { best = energy; bestStart = start; }
+      }
+      return bestStart / sr;
+    }
+    if (loudest15) loudest15.onclick = () => {
+      if (!audioBuffer) { notice.textContent = 'Upload audio first.'; return; }
+      stop();
+      const seconds = Math.min(15, audioBuffer.duration);
+      clipStart = findLoudestStart(seconds);
+      clipEnd = Math.min(audioBuffer.duration, clipStart + seconds);
+      loop.value = audioBuffer.duration > 15.2 ? '15' : '0';
+      pushHistoryState();
+      updateLabels();
+      refreshClipStart();
+      setPosition(clipStart);
+      notice.textContent = 'Loudest ' + Math.round(seconds) + 's starts at ' + formatTime(clipStart) + '.';
+    };
+    const reverbSpace = document.getElementById('reverbSpace');
+    if (reverbSpace) reverbSpace.addEventListener('change', () => { if (source) { stop(false); play(); } saveLastSettings(); });
+ zoomIn.onclick=()=>adjustZoom('in'); zoomOut.onclick=()=>adjustZoom('out'); undoPreset.onclick=()=>restoreHistory('undo'); redoPreset.onclick=()=>restoreHistory('redo'); document.addEventListener('keydown', event => {      const isTyping = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
       if ((event.code === 'Space' || event.key === ' ') && !isTyping) {
         event.preventDefault();
         if (audioBuffer) { if (source) stop(false); else play(); }
