@@ -3,9 +3,9 @@
     url: 'https://vnqzknyxxdxtjlfzyqfh.supabase.co',
     anonKey: 'sb_publishable_mKbX82lncbniQINpMLRrHQ_lZ7AJnCU',
     // Stripe Payment Links (create in Stripe Dashboard → Payment Links)
-    // Pro $7.99/mo with 7-day trial:
+    // Pro €7.99/mo with 7-day trial:
     stripeTrialLink: 'https://buy.stripe.com/28EbIT48L0SP8nV4TL7EQ00',
-    // Plus $3.99/mo (no trial) — set when the Plus product exists:
+    // Plus €3.99/mo (no trial) — set when the Plus product exists:
     stripePlusLink: '',
     // Optional: Supabase Edge Function that creates a Stripe Customer Portal session.
     stripePortalFunctionUrl: 'https://vnqzknyxxdxtjlfzyqfh.supabase.co/functions/v1/reverbly-stripe-portal',
