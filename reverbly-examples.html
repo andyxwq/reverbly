@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Examples — Reverbly</title>
@@ -40,6 +41,19 @@
     .footer { margin-top:40px; color:#998eae; font-size:12px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center; }
     .footer a { color:#cdbbff; }
     @media (max-width:900px) { .top { flex-wrap:wrap; row-gap:12px; } .navlinks { width:100%; justify-content:center; gap:14px; } }
+    @keyframes rise-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    main.wrap > h1 { animation:rise-in .6s ease both; }
+    main.wrap > .lead { animation:rise-in .7s ease .12s both; }
+    .motion .card { opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
+    .motion .card.is-in { opacity:1; transform:none; }
+    @media (hover:hover) and (pointer:fine) {
+      a.btn { transition:transform .18s ease, filter .18s ease; }
+      a.btn:hover { transform:translateY(-2px); }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      main.wrap > h1, main.wrap > .lead { animation:none; }
+      .motion .card { opacity:1; transform:none; }
+    }
   </style>
 </head>
 <body>
@@ -154,6 +168,23 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-C4QZKDYTN4');
+</script>
+<script>
+(function () {
+  var nodes = document.querySelectorAll(".card");
+  if (!document.documentElement.classList.contains("motion") || !("IntersectionObserver" in window)) {
+    nodes.forEach(function (el) { el.classList.add("is-in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-in");
+      io.unobserve(entry.target);
+    });
+  }, { threshold: 0.16 });
+  nodes.forEach(function (el) { io.observe(el); });
+})();
 </script>
 </body>
 </html>
