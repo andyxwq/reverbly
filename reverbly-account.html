@@ -394,10 +394,13 @@
           submitBtn.disabled = false;
           return;
         }
-        showMessage('Password updated. You are signed in.', false);
+        showMessage('Password updated. Sign in with your new password.', false);
         sessionStorage.removeItem('reverbly-recovery');
-        mode = 'signin';
-        await refreshAccount();
+        history.replaceState(null, '', returnTo);
+        await supabaseClient.auth.signOut();
+        activeSession = null;
+        setMode('signin');
+        submitBtn.textContent = 'Sign in →';
         submitBtn.disabled = false;
         return;
       }
