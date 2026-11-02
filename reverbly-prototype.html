@@ -18,7 +18,11 @@
   <meta name="twitter:title" content="Reverbly — Audio creator kit">
   <meta name="twitter:description" content="Create slowed + reverb, sped-up, and loop-ready WAV clips in your browser.">
   <meta name="twitter:image" content="https://reverbly.app/og.png">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script>
+    if (/\/reverbly-prototype\.html$/i.test(location.pathname)) {
+      history.replaceState(null, '', '/reverbly-prototype' + location.search + location.hash);
+    }
+  </script>
   <style>
     :root { --ink:#f6f3ff; --muted:#b8b1cb; --surface:#171226; --surface-2:#221a35; --line:#3a2e52; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; }
     * { box-sizing:border-box; }
