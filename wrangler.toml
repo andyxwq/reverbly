@@ -3,6 +3,9 @@ main = "src/worker.js"
 compatibility_date = "2025-08-01"
 workers_dev = true
 
+[vars]
+DISCORD_PUBLIC_KEY = "ad6aa529fe1abe6b502d1ea33720a4b03d535d7000a4e787baeae30373e1ec41"
+
 [assets]
 directory = "."
 binding = "ASSETS"
