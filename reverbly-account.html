@@ -138,13 +138,7 @@
     const passwordLabel = document.getElementById('passwordLabel');
     const tabSignIn = document.getElementById('tabSignIn');
     const tabSignUp = document.getElementById('tabSignUp');
-    const returnTo = (function () {
-      const u = new URL(window.location.href);
-      u.hash = '';
-      u.search = '';
-      if (!/reverbly-account/i.test(u.pathname)) u.pathname = '/reverbly-account';
-      return u.toString();
-    })();
+    const returnTo = 'https://reverbly.app/reverbly-account';
     let activeSession = null;
     let mode = 'signin'; // signin | signup | forgot | recovery
 
@@ -191,12 +185,12 @@
       modeTabs.hidden = signedIn || mode === 'forgot' || mode === 'recovery';
       emailInput.hidden = mode === 'recovery';
       document.getElementById('emailLabel').hidden = mode === 'recovery';
-      passwordFields.hidden = signedIn || mode === 'forgot';
+      passwordFields.hidden = mode === 'forgot' || (signedIn && mode !== 'recovery');
       termsWrap.style.display = !signedIn && mode === 'signup' ? '' : 'none';
       termsInput.required = !signedIn && mode === 'signup';
       magicBtn.hidden = mode === 'forgot' || mode === 'recovery' || signedIn;
       forgotBtn.hidden = mode !== 'signin' || signedIn;
-      backToSignIn.hidden = !(mode === 'forgot' || mode === 'recovery') || signedIn;
+      backToSignIn.hidden = !(mode === 'forgot' || mode === 'recovery');
 
       if (mode === 'signup') {
         passwordInput.autocomplete = 'new-password';
@@ -218,7 +212,8 @@
         passwordInput.placeholder = 'New password (min 6 chars)';
         passwordLabel.textContent = 'New password';
         passwordHint.textContent = 'Choose a new password for your Reverbly account.';
-        if (!signedIn) submitBtn.textContent = 'Save new password →';
+        submitBtn.textContent = 'Save new password →';
+        passwordFields.hidden = false;
       }
     }
 
