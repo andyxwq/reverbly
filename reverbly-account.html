@@ -306,7 +306,6 @@
       emailInput.required = false;
       emailInput.hidden = true;
       document.getElementById('emailLabel').hidden = true;
-      document.getElementById('accountTitle').textContent = 'Start free trial';
       document.getElementById('accountLead').hidden = true;
       document.getElementById('planTag').textContent = 'Signed in';
       passwordInput.disabled = true;
@@ -337,17 +336,7 @@
       }
 
       if (hasAccess) {
-        const label = plan === 'plus' ? 'Plus is active on this account.' : (plan === 'pro' || status === 'active') ? 'Pro is active on this account.' : 'Your Pro trial is active.';
-        document.getElementById('accountTitle').textContent = "You're signed in";
-        const lead = document.getElementById('accountLead');
-        lead.hidden = false;
-        lead.textContent = label;
-        document.getElementById('planTag').textContent = plan === 'plus' ? 'Plus' : (plan === 'pro' || status === 'active') ? 'Pro' : 'Trial active';
-        submitBtn.textContent = 'Open editor →';
-        document.getElementById('safeNote').hidden = true;
-        formEl.style.display = '';
-        showMessage(label, false);
-        window.location.assign('/reverbly-prototype');
+        window.location.replace('/reverbly-prototype');
         return;
       }
 
