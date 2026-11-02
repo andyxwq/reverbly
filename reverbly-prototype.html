@@ -207,6 +207,7 @@
       .time { margin-left:0; width:100%; }
       .wave-wrap { padding:12px; }
       canvas { height:84px; }
+      #recordTabBtn { display:none; }
     }
   </style>
 </head>
@@ -238,7 +239,7 @@
             <button id="loadUrlBtn" class="choose" type="button">Load link</button>
             <button id="recordTabBtn" class="choose" type="button">Record tab audio</button>
           </div>
-          <p class="muted" style="font-size:12px;margin:8px 0 0;line-height:1.45">TikTok, Instagram and YouTube links cannot be imported. Play the video yourself, then record the tab — only for audio you have the rights to use.</p>
+          <p id="importHint" class="muted" style="font-size:12px;margin:8px 0 0;line-height:1.45">TikTok, Instagram and YouTube links cannot be imported. Play the video yourself, then record the tab — only for audio you have the rights to use.</p>
         </div>
       </section>
       <section class="panel preview-panel">
@@ -1051,6 +1052,9 @@
     if (loadUrlBtn) loadUrlBtn.onclick = loadFromDirectUrl;
     if (audioUrl) audioUrl.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); loadFromDirectUrl(); } });
     let tabRecorder = null;
+    if (recordTabBtn && window.matchMedia('(max-width: 760px)').matches) recordTabBtn.hidden = true;
+    const importHint = document.getElementById('importHint');
+    if (importHint && window.matchMedia('(max-width: 760px)').matches) importHint.textContent = 'TikTok, Instagram and YouTube links cannot be imported. Upload a file you have the rights to use.';
     if (recordTabBtn) recordTabBtn.onclick = async () => {
       if (tabRecorder && tabRecorder.state === 'recording') { tabRecorder.stop(); return; }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
