@@ -34,6 +34,11 @@
     .card p{margin:0;font-size:14px}.card strong{color:var(--ink)}.btn{display:inline-flex;margin:0;padding:8px 12px;border-radius:9px;background:linear-gradient(105deg,var(--pink),#bea3ff);color:#1b102a;text-decoration:none;font-weight:750;font-size:13px}
     @media (max-width:720px) { .top { row-gap:12px; } .navlinks { width:100%; justify-content:center; } }
     .links{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}.socials{display:flex;flex-wrap:wrap;gap:4px;margin:18px 0 0;align-items:center}.socials a{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:#cdbbff;border:1px solid transparent}.socials a:hover{color:#f6f3ff;background:#2a2040;border-color:#4a3a68}
+    @keyframes rise-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    main h1 { animation:rise-in .6s ease both; }
+    main .card { animation:rise-in .7s ease .1s both; }
+    @media (hover:hover) and (pointer:fine) { a.btn { transition:transform .18s ease, filter .18s ease; } a.btn:hover { transform:translateY(-2px); } }
+    @media (prefers-reduced-motion:reduce) { main h1, main .card { animation:none; } }
   </style>
 </head>
 <body>
