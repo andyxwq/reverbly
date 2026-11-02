@@ -266,6 +266,7 @@
     const confirmTrialBtn = document.getElementById('confirmTrialBtn');
     const safeNote = document.getElementById('safeNote');
     let emailJustConfirmed = false;
+    let accountHasAccess = false;
 
     function showConfirmUI(email) {
       formEl.style.display = 'none';
@@ -317,17 +318,40 @@
       passwordFields.hidden = true;
       hideMailWait();
 
+      const [{ data: profile }, { data: subscription }] = await Promise.all([
+        supabaseClient.from('profiles').select('plan').eq('id', session.user.id).maybeSingle(),
+        supabaseClient.from('subscriptions').select('status').eq('user_id', session.user.id).maybeSingle()
+      ]);
+      const plan = profile?.plan || 'free';
+      const status = subscription?.status || '';
+      const hasAccess = plan === 'trialing' || plan === 'pro' || plan === 'plus' || status === 'trialing' || status === 'active';
+      accountHasAccess = hasAccess;
+
       if (emailJustConfirmed || cameFromEmailLink()) {
         emailJustConfirmed = false;
-        showConfirmUI(session.user.email);
-        // Clean hash tokens from URL without reload
-        try {
-          const clean = returnTo;
-          window.history.replaceState({}, document.title, clean);
-        } catch (_) {}
+        try { window.history.replaceState({}, document.title, returnTo); } catch (_) {}
+        if (!hasAccess) {
+          showConfirmUI(session.user.email);
+          return;
+        }
+      }
+
+      if (hasAccess) {
+        const label = plan === 'plus' ? 'Plus is active on this account.' : (plan === 'pro' || status === 'active') ? 'Pro is active on this account.' : 'Your Pro trial is active.';
+        document.getElementById('accountTitle').textContent = "You're signed in";
+        const lead = document.getElementById('accountLead');
+        lead.hidden = false;
+        lead.textContent = label;
+        document.getElementById('planTag').textContent = plan === 'plus' ? 'Plus' : (plan === 'pro' || status === 'active') ? 'Pro' : 'Trial active';
+        submitBtn.textContent = 'Open editor →';
+        document.getElementById('safeNote').hidden = true;
+        formEl.style.display = '';
+        showMessage(label, false);
+        window.location.assign('/reverbly-prototype');
         return;
       }
 
+      document.getElementById('accountTitle').textContent = 'Start free trial';
       submitBtn.textContent = 'Start free trial →';
       formEl.style.display = '';
       showMessage('', false);
@@ -350,6 +374,10 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (activeSession?.user?.id && mode !== 'recovery') {
+        if (accountHasAccess) {
+          window.location.assign('/reverbly-prototype');
+          return;
+        }
         if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start');
         window.location.assign(checkoutUrl(activeSession.user.id, 'pro'));
         return;
