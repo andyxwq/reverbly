@@ -1,6 +1,12 @@
 function hexToBytes(hex) {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  const clean = String(hex || '').trim().replace(/\s+/g, '');
+  if (!clean || clean.length % 2 !== 0) return null;
+  const bytes = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = parseInt(clean.substr(i * 2, 2), 16);
+    if (Number.isNaN(byte)) return null;
+    bytes[i] = byte;
+  }
   return bytes;
 }
 
@@ -8,10 +14,20 @@ async function verifyDiscord(request, body, publicKey) {
   const signature = request.headers.get('x-signature-ed25519');
   const timestamp = request.headers.get('x-signature-timestamp');
   if (!signature || !timestamp || !publicKey) return false;
-  const age = Math.abs(Date.now() - Number(timestamp) * 1000);
-  if (!Number.isFinite(age) || age > 5 * 60 * 1000) return false;
-  const key = await crypto.subtle.importKey('raw', hexToBytes(publicKey), { name: 'Ed25519' }, false, ['verify']);
-  return crypto.subtle.verify('Ed25519', key, hexToBytes(signature), new TextEncoder().encode(timestamp + body));
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts)) return false;
+  const ms = ts > 1e12 ? ts : ts * 1000;
+  if (Math.abs(Date.now() - ms) > 10 * 60 * 1000) return false;
+  try {
+    const keyBytes = hexToBytes(publicKey);
+    const sigBytes = hexToBytes(signature);
+    if (!keyBytes || keyBytes.length !== 32 || !sigBytes || sigBytes.length !== 64) return false;
+    const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'Ed25519' }, false, ['verify']);
+    const message = new TextEncoder().encode(timestamp + body);
+    return await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, message);
+  } catch {
+    return false;
+  }
 }
 
 function commandReply(name) {
@@ -48,6 +64,14 @@ async function discordInteraction(request, env) {
   return Response.json({ type: 4, data: { content: 'Try /editor, /pricing, or /help.' } });
 }
 
+function keyStatus(publicKey) {
+  const clean = String(publicKey || '').trim().replace(/\s+/g, '');
+  const bytes = hexToBytes(clean);
+  if (!bytes) return 'public-key-bytes: 0';
+  const preview = clean.length >= 12 ? clean.slice(0, 8) + '...' + clean.slice(-4) : 'short';
+  return 'public-key-bytes: ' + bytes.length + '\npublic-key: ' + preview;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -55,6 +79,11 @@ export default {
 
     if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
 
+    if (path === '/discord' && request.method === 'GET') {
+      return new Response('discord ok\n' + keyStatus(env.DISCORD_PUBLIC_KEY) + '\n', {
+        headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
+      });
+    }
     if (path === '/discord' && request.method === 'POST') return discordInteraction(request, env);
     if (path === '/discord-setup') return registerCommands(env);
 
