@@ -157,7 +157,7 @@
             <li>WAV and MP3 in one click</li>
             <li>Up to 10 minutes and 40 MB</li>
           </ul>
-          <a class="outline" href="/reverbly-account">Get Plus</a>
+          <a class="outline" id="plusCta" href="/reverbly-account">Get Plus</a>
           <p class="fine">Best if you post often and hit the daily limit.</p>
         </article>
         <article class="plan pro">
@@ -171,8 +171,8 @@
             <li>Three versions in one export</li>
             <li>Up to 20 minutes and 80 MB</li>
           </ul>
-          <a class="primary" href="/reverbly-account">Get Pro</a>
-          <p class="fine">Try Pro free for 7 days. Cancel before it ends — no charge.</p>
+          <a class="primary" id="proCta" href="/reverbly-account">Get Pro</a>
+          <p class="fine" id="proFine">Try Pro free for 7 days. Cancel before it ends — no charge.</p>
         </article>
       </div>
     </section>
@@ -230,7 +230,7 @@
       <h2>Ready when you are</h2>
       <p>Stay on Free, get Plus for the full editor, or get Pro when you want no limits.</p>
       <div class="hero-actions" style="justify-content:center;margin-top:18px">
-        <a class="primary" href="/reverbly-account">Get Pro</a>
+        <a class="primary" id="bottomPro" href="/reverbly-account">Get Pro</a>
         <a class="outline" href="/reverbly-prototype">Open editor</a>
       </div>
     </section>
@@ -244,5 +244,29 @@
     </div>
     <span>Only upload audio you own or are licensed to use.</span>
   </footer>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="reverbly-supabase-config.js"></script>
+  <script>
+    (async function () {
+      var client = window.reverblySupabaseClient;
+      if (!client) return;
+      var session = (await client.auth.getSession()).data.session;
+      if (!session) return;
+      var profile = (await client.from('profiles').select('plan').eq('id', session.user.id).maybeSingle()).data;
+      var plan = (profile && profile.plan) || 'free';
+      var plusCta = document.getElementById('plusCta');
+      var proCta = document.getElementById('proCta');
+      var proFine = document.getElementById('proFine');
+      var bottom = document.getElementById('bottomPro');
+      if (plan === 'trialing' || plan === 'pro') {
+        if (proCta) { proCta.textContent = plan === 'trialing' ? 'Trial active' : 'Current plan'; proCta.href = '/reverbly-dashboard'; }
+        if (bottom) { bottom.textContent = 'Open account'; bottom.href = '/reverbly-dashboard'; }
+        if (proFine) proFine.textContent = plan === 'trialing' ? 'Your Pro trial is already active.' : 'You are already on Pro.';
+        if (plusCta) { plusCta.textContent = 'Included in Pro'; plusCta.href = '/reverbly-dashboard'; }
+      } else if (plan === 'plus') {
+        if (plusCta) { plusCta.textContent = 'Current plan'; plusCta.href = '/reverbly-dashboard'; }
+      }
+    })();
+  </script>
 </body>
 </html>
