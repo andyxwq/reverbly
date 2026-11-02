@@ -28,7 +28,6 @@ export default {
     if (response.status === 200) {
       const headers = new Headers(response.headers);
       headers.set("content-type", "text/html; charset=utf-8");
-      headers.set("content-disposition", "inline");
       return new Response(response.body, { status: 200, headers });
     }
 
