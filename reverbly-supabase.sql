@@ -4,7 +4,7 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
-  plan text not null default 'free' check (plan in ('free', 'trialing', 'pro')),
+  plan text not null default 'free' check (plan in ('free', 'trialing', 'plus', 'pro')),
   export_date date,
   export_count integer not null default 0,
   created_at timestamptz not null default now(),
@@ -68,3 +68,7 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Existing projects: allow the Plus plan. Safe to run more than once.
+alter table public.profiles drop constraint if exists profiles_plan_check;
+alter table public.profiles add constraint profiles_plan_check check (plan in ('free', 'trialing', 'plus', 'pro'));
