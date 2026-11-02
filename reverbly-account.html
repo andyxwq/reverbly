@@ -117,6 +117,12 @@
       </aside>
     </section>
   </main>
+  <script>
+    (function () {
+      var blob = (location.hash || '') + (location.search || '');
+      if (/type=recovery/i.test(blob)) sessionStorage.setItem('reverbly-recovery', '1');
+    })();
+  </script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="reverbly-supabase-config.js"></script>
   <script>
@@ -214,6 +220,9 @@
         passwordHint.textContent = 'Choose a new password for your Reverbly account.';
         submitBtn.textContent = 'Save new password →';
         passwordFields.hidden = false;
+        document.getElementById('accountTitle').textContent = 'Set a new password';
+        document.getElementById('accountLead').hidden = false;
+        document.getElementById('accountLead').textContent = 'The reset link signed you in. Enter a new password to finish.';
       }
     }
 
@@ -367,6 +376,7 @@
           return;
         }
         showMessage('Password updated. You are signed in.', false);
+        sessionStorage.removeItem('reverbly-recovery');
         mode = 'signin';
         await refreshAccount();
         submitBtn.disabled = false;
@@ -492,7 +502,7 @@
       }
       if (session && mode !== 'recovery') refreshAccount();
     });
-    if (/type=recovery/i.test((location.hash || '') + (location.search || ''))) {
+    if (sessionStorage.getItem('reverbly-recovery') === '1' || /type=recovery/i.test((location.hash || '') + (location.search || ''))) {
       setMode('recovery');
       showMessage('Choose a new password for your account.', false);
     }
