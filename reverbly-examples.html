@@ -19,7 +19,11 @@
     body { margin:0; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 12% 0%, #392567 0, transparent 28rem), radial-gradient(circle at 90% 80%, #4c1d52 0, transparent 28rem), var(--bg); font:16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     a { color:inherit; }
     .wrap { width:min(980px, calc(100% - 32px)); margin:auto; padding:28px 0 64px; }
-    .brand { display:inline-flex; gap:10px; align-items:center; font-size:20px; font-weight:750; letter-spacing:-.5px; text-decoration:none; margin-bottom:28px; }
+    .brand { display:inline-flex; gap:10px; align-items:center; font-size:20px; font-weight:750; letter-spacing:-.5px; text-decoration:none; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+    .navlinks { display:flex; gap:18px; align-items:center; color:var(--muted); font-size:14px; }
+    .navlinks a { text-decoration:none; }
+    .navlinks a:hover { color:var(--ink); }
     .mark { display:grid; place-items:center; width:32px; height:32px; border-radius:9px; color:#160d26; background:linear-gradient(135deg,var(--pink),var(--purple)); box-shadow:0 0 28px #ad78ff70; }
     h1 { margin:0 0 8px; font-size:clamp(28px,5vw,40px); letter-spacing:-1.4px; line-height:1.1; }
     .lead { margin:0 0 28px; color:var(--muted); max-width:540px; }
@@ -33,14 +37,22 @@
     .chip.accent { border-color:#6a5490; color:#e8dcff; background:#2a2040; }
     .btn { display:inline-flex; align-items:center; justify-content:center; margin-top:6px; border:0; border-radius:10px; padding:11px 14px; font-weight:700; font-size:13.5px; text-decoration:none; color:#1b102a; background:linear-gradient(105deg,var(--pink),#bea3ff); }
     .btn:hover { filter:brightness(1.05); }
-    .footer { margin-top:40px; color:#998eae; font-size:12px; }
+    .footer { margin-top:40px; color:#998eae; font-size:12px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center; }
     .footer a { color:#cdbbff; }
     @media (max-width:560px) { .wrap { padding-top:20px; } }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <a class="brand" href="/"><span class="mark">R</span>Reverbly</a>
+    <div class="top">
+      <a class="brand" href="/"><span class="mark">R</span>Reverbly</a>
+      <nav class="navlinks" aria-label="Main navigation">
+        <a href="/reverbly-features">Features</a>
+        <a href="/reverbly-examples">Examples</a>
+        <a href="/reverbly-pricing">Pricing</a>
+        <a href="/reverbly-dashboard">Account</a>
+      </nav>
+    </div>
     <h1>Example settings</h1>
     <p class="lead">Open any example in the editor. Upload your own audio — the controls load automatically, including bass and keep-pitch when set.</p>
     <div class="grid">
@@ -133,7 +145,7 @@
         <a class="btn" href="/reverbly-prototype?speed=0.85&reverb=40&bass=3&keepPitch=1&fadeIn=0.2&fadeOut=0.4&loop=0">Open in editor →</a>
       </article>
     </div>
-    <p class="footer"><a href="/reverbly-prototype">Open empty editor</a> · <a href="/">Home</a> · <a href="/reverbly-support">Support</a></p>
+    <p class="footer"><span><a href="/reverbly-prototype">Open empty editor</a> · <a href="/">Home</a> · <a href="/reverbly-support">Support</a></span><span>Only upload audio you own or are licensed to use.</span></p>
   </main>
 </body>
 </html>
