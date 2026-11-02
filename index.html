@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
+  <script>document.documentElement.classList.add("motion")</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -118,11 +118,6 @@
     @media (hover:hover) and (pointer:fine) {
       a.primary, a.outline, .demo-card button { transition:transform .18s ease, filter .18s ease; }
       a.primary:hover, a.outline:hover, .demo-card button:hover { transform:translateY(-2px); }
-    }
-    @media (prefers-reduced-motion:reduce) {
-      .hero .eyebrow, .hero h1, .hero .lead, .hero .hero-actions, .hero .cred { animation:none; }
-      .motion .editor-shot, .motion .demo { opacity:1; transform:none; }
-      .motion .editor-shot { transform:perspective(1500px) rotateX(3deg); }
     }
   </style>
 </head>
