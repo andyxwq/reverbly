@@ -186,6 +186,8 @@
     function setMode(next) {
       mode = next;
       const signedIn = !!activeSession;
+      emailInput.disabled = mode === 'recovery';
+      emailInput.required = mode !== 'recovery' && !signedIn;
       tabSignIn.classList.toggle('active', mode === 'signin');
       tabSignUp.classList.toggle('active', mode === 'signup');
       modeTabs.hidden = signedIn || mode === 'forgot' || mode === 'recovery';
