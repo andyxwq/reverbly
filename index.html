@@ -19,6 +19,14 @@
   <meta name="twitter:title" content="Reverbly — Make your audio ready to post">
   <meta name="twitter:description" content="Browser audio editor for short-form creators. Slowed + reverb, sped-up, and loop-ready WAV exports.">
   <meta name="twitter:image" content="https://reverbly.app/og.png">
+  <script>
+    (function () {
+      var blob = (location.hash || '') + (location.search || '');
+      if (/type=recovery|access_token=|type=signup|type=magiclink|type=email|(?:^|[?&#])code=/i.test(blob)) {
+        location.replace('/reverbly-account' + location.search + location.hash);
+      }
+    })();
+  </script>
   <style>
     :root { --ink:#f6f3ff; --muted:#b8b1cb; --surface:#181128; --surface-2:#231a36; --line:#3a2e52; --purple:#9f7cff; --pink:#ff77c8; --green:#84e8c1; }
     * { box-sizing:border-box; } html { scroll-behavior:smooth; }
