@@ -20,6 +20,12 @@
     a{color:#cdbbff}h1{font-size:42px;letter-spacing:-1.5px;margin:0 0 10px}
     p{color:#b8b1cb}.links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:22px}
     .btn{padding:12px 16px;border-radius:11px;background:linear-gradient(105deg,#ff77c8,#bea3ff);color:#1b102a;text-decoration:none;font-weight:750}
+    @keyframes rise-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    h1 { animation:rise-in .55s ease both; }
+    p { animation:rise-in .65s ease .08s both; }
+    .links { animation:rise-in .7s ease .16s both; }
+    @media (hover:hover) and (pointer:fine) { a.btn { transition:transform .18s ease; } a.btn:hover { transform:translateY(-2px); } }
+    @media (prefers-reduced-motion:reduce) { h1, p, .links { animation:none; } }
   </style>
 </head>
 <body>
