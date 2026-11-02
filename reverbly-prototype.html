@@ -310,10 +310,6 @@
         </div>
         <div id="upsellBox" class="upsell" role="status"></div>
         <button id="exportButton" class="export" type="button" disabled>Export WAV</button><button id="exportBoth" class="secondary" type="button" disabled style="width:100%;margin-top:8px">Export WAV + MP3 <small class="need">Plus</small></button><button type="button" class="info" aria-label="What export both does" data-hint="Downloads both files. The menu above downloads only the one you pick.">!</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
-        <div id="cloudBox" class="saved-presets" style="margin-top:14px">
-          <div class="saved-presets-head"><h3>Your cloud</h3><small id="cloudHint">Pro</small></div>
-          <div id="cloudList" class="saved-list"></div>
-        </div>
       </section>
       </div>
     </section>
@@ -370,8 +366,6 @@
       const savePresetEl = document.getElementById('savePreset');
       if (presetNameEl) presetNameEl.disabled = !pro;
       if (savePresetEl) savePresetEl.disabled = !pro;
-      const cloudHint = document.getElementById('cloudHint');
-      if (cloudHint) cloudHint.textContent = pro ? 'Your Pro copies' : 'Pro';
       document.querySelectorAll('.need').forEach((el) => { el.hidden = (el.textContent.trim() === 'Pro') ? pro : plus; });
     }
     let pitchCacheBuffer = null, pitchCacheSemis = null, pitchCacheSource = null;
@@ -892,8 +886,7 @@
       updateProgress(100, 'Download ready');
       const cloudSave = await saveExportHistory(blob, both ? buildExportFilename('wav') : outputName);
       if (cloudSave && cloudSave.stored) {
-        notice.textContent += ' Saved to your cloud.';
-        if (typeof loadCloudCopies === 'function') loadCloudCopies();
+        notice.textContent += ' Saved in Account.';
       } else if (!cloudSave || !cloudSave.signedIn) {
         notice.textContent += ' Sign in to keep a copy in your account.';
       }
@@ -1260,49 +1253,8 @@
       notice.textContent = 'Batch complete: 3 downloads started.';
       if (window.reverblyTrack) window.reverblyTrack('batch_export', { count: 3 });
     };
-    async function loadCloudCopies() {
-      const list = document.getElementById('cloudList');
-      const hint = document.getElementById('cloudHint');
-      if (!list || !reverblyAuth) return;
-      const { data: { session } } = await reverblyAuth.auth.getSession();
-      if (!session) {
-        if (hint) hint.textContent = 'Sign in to keep exports';
-        list.innerHTML = '<p class="muted">Exports stay on this device until you sign in.</p>';
-        return;
-      }
-      if (hint) hint.textContent = 'Private to your account';
-      const { data, error } = await reverblyAuth.from('exports').select('output_name,storage_path,created_at').order('created_at', { ascending: false }).limit(5);
-      list.replaceChildren();
-      if (error || !data || !data.length) {
-        list.innerHTML = '<p class="muted">No cloud copies yet. Export while signed in.</p>';
-        return;
-      }
-      for (const item of data) {
-        const row = document.createElement('div');
-        row.className = 'saved-item';
-        const label = document.createElement('span');
-        label.textContent = item.output_name;
-        label.style.flex = '1';
-        label.style.fontSize = '13px';
-        row.append(label);
-        if (item.storage_path) {
-          const { data: signed } = await reverblyAuth.storage.from('exports').createSignedUrl(item.storage_path, 300);
-          if (signed && signed.signedUrl) {
-            const link = document.createElement('a');
-            link.href = signed.signedUrl;
-            link.target = '_blank';
-            link.rel = 'noopener';
-            link.textContent = 'Open';
-            link.style.color = '#cdbbff';
-            link.style.fontSize = '13px';
-            row.append(link);
-          }
-        }
-        list.append(row);
-      }
-    }
     if (historySettings.get('mode')) processMode = historySettings.get('mode');
-    pushHistoryState(); applyHistorySettings(); loadLastSettings(); dressSelects(); updateLabels(); loadSavedPresets(); loadCloudCopies();
+    pushHistoryState(); applyHistorySettings(); loadLastSettings(); dressSelects(); updateLabels(); loadSavedPresets();
     (function () {
       var fmt = document.getElementById('exportFormat');
       var exportBtn = document.getElementById('exportButton');
