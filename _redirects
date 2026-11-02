@@ -1,5 +1,5 @@
 # Root must resolve (Workers with strict routing can 404 / without this)
 /                         /index.html                 200
-/app                      /reverbly-prototype.html    302
+/app                      /editor    302
 /trial                    /reverbly-account.html      302
 /account                  /reverbly-dashboard.html    302

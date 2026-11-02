@@ -6,7 +6,7 @@ Reverbly is a browser-based audio editor for short-form creators. It creates slo
 
 - `index.html` – entry point (redirects to landing)
 - `reverbly-landing.html` – marketing site
-- `reverbly-prototype.html` – audio editor
+- `reverbly-prototype.html` – audio editor, public URL `/editor`
 - `reverbly-account.html` – passwordless sign-in and trial checkout entry
 - `reverbly-dashboard.html` – plan status, billing portal entry, export history
 - `reverbly-privacy.html` / `reverbly-terms.html` – legal pages

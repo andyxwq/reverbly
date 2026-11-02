@@ -31,9 +31,9 @@ async function verifyDiscord(request, body, publicKey) {
 }
 
 function commandReply(name) {
-  if (name === 'editor') return 'Open the editor: https://reverbly.app/reverbly-prototype';
+  if (name === 'editor') return 'Open the editor: https://reverbly.app/editor';
   if (name === 'pricing') return 'Plus is €3.99/month. Pro is €7.99/month and includes a 7-day trial. https://reverbly.app/reverbly-pricing';
-  if (name === 'help') return 'Reverbly turns original audio into slowed, sped-up, and looped versions. Free includes 3 exports a day. Editor: https://reverbly.app/reverbly-prototype';
+  if (name === 'help') return 'Reverbly turns original audio into slowed, sped-up, and looped versions. Free includes 3 exports a day. Editor: https://reverbly.app/editor';
   return 'Try /editor, /pricing, or /help.';
 }
 
@@ -86,6 +86,16 @@ export default {
     }
     if (path === '/discord' && request.method === 'POST') return discordInteraction(request, env);
     if (path === '/discord-setup') return registerCommands(env);
+
+    if (path === '/reverbly-prototype' || path === '/reverbly-prototype.html' || path === '/app') {
+      return Response.redirect(new URL('/editor' + url.search, url.origin), 301);
+    }
+    if (path === '/editor' || path === '/editor.html') {
+      const editor = await env.ASSETS.fetch(new URL('/reverbly-prototype.html' + url.search, url.origin));
+      const headers = new Headers(editor.headers);
+      headers.set('content-type', 'text/html; charset=utf-8');
+      return new Response(editor.body, { status: editor.status, headers });
+    }
 
     if (path === '/' || path === '') {
       return env.ASSETS.fetch(new URL('/index.html', url.origin));

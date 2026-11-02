@@ -25,7 +25,7 @@
 
 [[redirects]]
   from = "/app"
-  to = "/reverbly-prototype.html"
+  to = "/editor"
   status = 301
 
 [[redirects]]

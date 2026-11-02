@@ -48,7 +48,7 @@
         <div class="eyebrow">Your account</div>
         <h1>Sign in to see your plan.</h1>
         <p class="muted">Your exports and subscription status live here.</p>
-        <div class="actions"><a class="button" href="/reverbly-account">Sign in</a><a class="button secondary" href="/reverbly-prototype">Open editor</a></div>
+        <div class="actions"><a class="button" href="/reverbly-account">Sign in</a><a class="button secondary" href="/editor">Open editor</a></div>
       </div>
       <div id="signedIn" class="hidden">
         <div class="eyebrow">Your account</div>
@@ -60,7 +60,7 @@
         </div>
         <div id="subscriptionNote" class="notice">Checking your subscription…</div>
         <div class="actions">
-          <a class="button" href="/reverbly-prototype">Open editor</a>
+          <a class="button" href="/editor">Open editor</a>
           <a class="button secondary hidden" id="startTrial" href="/reverbly-account">Upgrade plan</a>
           <button class="button secondary hidden" id="manageBilling" type="button">Manage billing</button>
           <button id="signOut" class="button secondary" type="button">Sign out</button>
@@ -87,7 +87,7 @@
         speed: item.speed, reverb: item.reverb, fadeIn: item.fade_in,
         fadeOut: item.fade_out, loop: item.loop_seconds, clipStart: item.clip_start_seconds
       });
-      return '/reverbly-prototype?' + params;
+      return '/editor?' + params;
     }
 
     async function loadHistory() {
@@ -101,7 +101,7 @@
         return;
       }
       if (!items || !items.length) {
-        list.innerHTML = '<p class="empty-history">No exports yet. Open the editor, make a version, and export while signed in — it will show up here.</p><p class="empty-history" style="margin-top:12px"><a class="button" href="/reverbly-prototype" style="display:inline-flex">Open editor</a></p>';
+        list.innerHTML = '<p class="empty-history">No exports yet. Open the editor, make a version, and export while signed in — it will show up here.</p><p class="empty-history" style="margin-top:12px"><a class="button" href="/editor" style="display:inline-flex">Open editor</a></p>';
         return;
       }
       for (const item of items) {
