@@ -66,7 +66,10 @@
     .saved-item { display:flex; gap:8px; align-items:center; }
     .saved-item button:first-child { flex:1; padding:9px 10px; text-align:left; color:var(--ink); border:1px solid #423557; border-radius:9px; background:#211932; }
     .saved-item button:last-child { border:0; color:#d9cbe5; background:transparent; font-size:18px; }
-    .control { margin:18px 0; }
+    .control { margin:12px 0; }
+    .more-controls { margin-top:6px; border:1px solid #3a2e52; border-radius:14px; background:#140f20; }
+    .more-controls summary { cursor:pointer; padding:12px 14px; font-weight:700; color:#f6f3ff; }
+    .more-controls .more-body { padding:0 14px 8px; }
     .control label { display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; }
     .value { color:var(--pink); font-variant-numeric:tabular-nums; }
     input[type="range"] { width:100%; accent-color:var(--pink); }
@@ -263,10 +266,20 @@
         </section>
       </section>
       <section class="panel controls-panel">
-        <h2>4. Fine-tune your export</h2><p class="muted">Adjust the effect, transitions and clip length.</p>
+        <h2>4. Fine-tune your export</h2><p class="muted">Speed, reverb and length. The rest is under More controls.</p>
         <div class="control"><label for="speed">Speed <span id="speedValue" class="value">0.82×</span></label><input id="speed" type="range" min="0.6" max="1.4" step="0.01" value="0.82"></div>
-        <div class="control"><label for="pitch">Pitch <span id="pitchValue" class="value">0 st</span> <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What pitch does" data-hint="Moves the tone up or down. Speed stays the same.">!</button><input id="pitch" type="range" min="-12" max="12" step="1" value="0"></div>
         <div class="control"><label for="reverb">Reverb <span id="reverbValue" class="value">58%</span></label><input id="reverb" type="range" min="0" max="100" step="1" value="58"></div>
+        <div class="control"><label for="loop">Export length <span id="loopValue" class="value">Full audio</span></label><input id="loop" type="range" min="0" max="60" step="15" value="0"></div>
+        <div class="opt"><label for="exportFormat">Download format
+          <select id="exportFormat" class="native-select">
+            <option value="wav">WAV</option>
+            <option value="mp3">MP3</option>
+          </select>
+        </label></div>
+        <details class="more-controls">
+          <summary>More controls</summary>
+          <div class="more-body">
+        <div class="control"><label for="pitch">Pitch <span id="pitchValue" class="value">0 st</span> <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What pitch does" data-hint="Moves the tone up or down. Speed stays the same.">!</button><input id="pitch" type="range" min="-12" max="12" step="1" value="0"></div>
         <div class="control"><label for="reverbSpace">Reverb space <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What reverb space does" data-hint="Room or hall is the type of reverb. The percent above is how strong it is.">!</button>
           <select id="reverbSpace" class="native-select">
             <option value="room">Small room</option>
@@ -277,18 +290,6 @@
         <div class="opt"><label><input id="keepPitch" type="checkbox"> Keep original pitch when changing speed <small class="need">Plus</small></label> <button type="button" class="info" aria-label="What keep pitch does" data-hint="Holds the original tone when you change speed.">!</button></div>
         <div class="control"><label for="fadeIn">Fade in <span id="fadeInValue" class="value">0.0s</span> <small class="need">Plus</small></label><input id="fadeIn" type="range" min="0" max="5" step="0.1" value="0"></div>
         <div class="control"><label for="fadeOut">Fade out <span id="fadeOutValue" class="value">0.0s</span> <small class="need">Plus</small></label><input id="fadeOut" type="range" min="0" max="5" step="0.1" value="0"></div>
-        <div class="control"><label for="loop">Export length <span id="loopValue" class="value">Full audio</span></label><input id="loop" type="range" min="0" max="60" step="15" value="0"></div>
-        <div class="export-meta">
-          <div class="progress-track" aria-hidden="true"><div id="exportProgressBar" class="progress-bar"></div></div>
-          <span id="exportProgressText" class="progress-label">Waiting for file</span>
-        </div>
-        
-        <div class="opt"><label for="exportFormat">Download format
-          <select id="exportFormat" class="native-select">
-            <option value="wav">WAV</option>
-            <option value="mp3">MP3</option>
-          </select>
-        </label></div>
         <div class="opt"><label><input id="optNormalize" type="checkbox" checked> Normalize loudness on export</label></div>
         <div class="opt"><label><input id="optTrim" type="checkbox"> Auto-trim silence at edges</label></div>
         <div class="opt"><label><input id="optSeamless" type="checkbox"> Seamless loop (crossfade edges) <small class="need">Plus</small></label></div>
@@ -300,6 +301,12 @@
         <div id="cloudBox" class="saved-presets" style="margin-top:14px">
           <div class="saved-presets-head"><h3>Your cloud</h3><small id="cloudHint">Pro</small></div>
           <div id="cloudList" class="saved-list"></div>
+        </div>
+          </div>
+        </details>
+        <div class="export-meta">
+          <div class="progress-track" aria-hidden="true"><div id="exportProgressBar" class="progress-bar"></div></div>
+          <span id="exportProgressText" class="progress-label">Waiting for file</span>
         </div>
         <div id="upsellBox" class="upsell" role="status"></div>
         <button id="exportButton" class="export" type="button" disabled>Export WAV</button><button id="exportBoth" class="secondary" type="button" disabled style="width:100%;margin-top:8px">Export WAV + MP3 <small class="need">Plus</small></button><button type="button" class="info" aria-label="What export both does" data-hint="Downloads both files. The menu above downloads only the one you pick.">!</button><p id="notice" class="notice" aria-live="polite">Upload a file to start.</p>
