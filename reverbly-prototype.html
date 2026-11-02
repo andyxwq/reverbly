@@ -19,6 +19,7 @@
   <meta name="twitter:description" content="Create slowed + reverb, sped-up, and loop-ready WAV clips in your browser.">
   <meta name="twitter:image" content="https://reverbly.app/og.png">
   <script>
+    try { localStorage.setItem('reverbly-seen-editor', '1'); } catch (e) {}
     if (/\/reverbly-prototype\.html$/i.test(location.pathname)) {
       history.replaceState(null, '', '/reverbly-prototype' + location.search + location.hash);
     }
