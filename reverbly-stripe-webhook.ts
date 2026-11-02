@@ -6,14 +6,21 @@ function hex(bytes: ArrayBuffer) {
   return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
-async function isValidStripeSignature(body: string, signature: string | null, secret: string) {
-  if (!signature || !secret) return false
-  const values = Object.fromEntries(signature.split(',').map((part) => part.split('=')))
-  const timestamp = Number(values.t)
-  if (!timestamp || !values.v1 || Math.abs(Date.now() / 1000 - timestamp) > 300) return false
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}.${body}`))
-  return hex(digest) === values.v1
+async function stripeSignatureError(body: string, signature: string | null, secret: string) {
+  const trimmed = secret.trim()
+  if (!signature || !trimmed) return 'Webhook secret is missing'
+  const parts = signature.split(',').map((part) => {
+    const index = part.indexOf('=')
+    return [part.slice(0, index).trim(), part.slice(index + 1).trim()] as const
+  })
+  const timestamp = Number(parts.find(([key]) => key === 't')?.[1])
+  const signatures = parts.filter(([key]) => key === 'v1').map(([, value]) => value)
+  if (!timestamp || !signatures.length) return 'Stripe signature is malformed'
+  if (Math.abs(Date.now() / 1000 - timestamp) > 60 * 60 * 24 * 7) return 'Stripe signature is older than 7 days'
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(trimmed), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const digest = hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}.${body}`)))
+  if (!signatures.some((value) => value === digest)) return 'Stripe signature does not match this endpoint secret'
+  return ''
 }
 
 function periodEnd(subscription: Record<string, unknown>) {
@@ -48,9 +55,12 @@ async function profileIdFor(supabase: ReturnType<typeof createClient>, customerI
     }
   }
   if (!customerEmail) return null
-  const { data, error } = await supabase.from('profiles').select('id').eq('email', customerEmail).maybeSingle()
+  const { data, error } = await supabase.from('profiles').select('id').ilike('email', customerEmail).maybeSingle()
   if (error) throw error
-  return data?.id ?? null
+  if (data?.id) return data.id
+  const listed = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 })
+  const user = listed.data?.users?.find((entry) => entry.email?.toLowerCase() === customerEmail.toLowerCase())
+  return user?.id ?? null
 }
 
 async function saveSubscription(supabase: ReturnType<typeof createClient>, userId: string, subscription: Record<string, unknown>) {
@@ -77,8 +87,9 @@ Deno.serve(async (request) => {
   try {
     const body = await request.text()
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? ''
-    if (!(await isValidStripeSignature(body, request.headers.get('stripe-signature'), webhookSecret))) {
-      return new Response(JSON.stringify({ error: 'Invalid Stripe signature' }), { status: 400, headers: corsHeaders })
+    const signatureError = await stripeSignatureError(body, request.headers.get('stripe-signature'), webhookSecret)
+    if (signatureError) {
+      return new Response(JSON.stringify({ error: signatureError }), { status: 400, headers: corsHeaders })
     }
 
     const keys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') ?? '{}')
