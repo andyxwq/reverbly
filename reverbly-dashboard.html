@@ -42,7 +42,7 @@
           <div class="detail"><div class="label">Current plan</div><div id="plan" class="value"><span class="badge">Loading…</span></div></div>
           <div class="detail"><div class="label">Exports today</div><div id="exports" class="value">—</div></div>
         </div>
-        <div id="subscriptionNote" class="notice">Checking your subscription…</div><div id="planCompare" class="notice hidden" style="margin-top:12px"></div>
+        <div id="subscriptionNote" class="notice">Checking your subscription…</div>
         <div class="actions">
           <a class="button" href="/reverbly-prototype.html">Open editor</a>
           <a class="button secondary hidden" id="startTrial" href="/reverbly-account">Upgrade plan</a>
@@ -172,27 +172,24 @@
       const isPaid = plan === 'trialing' || plan === 'pro' || plan === 'plus' ||
         subscription?.status === 'trialing' || subscription?.status === 'active';
       startTrial.classList.toggle('hidden', isPaid);
-      const compareEl=document.getElementById('planCompare'); if(compareEl){ if(isPaid) compareEl.classList.add('hidden'); }
       manageBilling.classList.toggle('hidden', !subscription?.stripe_customer_id);
 
       subscriptionNote.classList.remove('err');
-      if (subscription?.status === 'trialing') {
-        subscriptionNote.textContent = subscription.trial_ends_at
-          ? 'Your trial is active until ' + new Date(subscription.trial_ends_at).toLocaleDateString() + '. Cancel anytime from Manage billing.'
-          : 'Your trial is active. End date is being confirmed.';
-      } else if (subscription?.status === 'active') {
-        subscriptionNote.textContent = subscription.current_period_ends_at
-          ? 'Your paid plan is active. Current period ends ' + new Date(subscription.current_period_ends_at).toLocaleDateString() + '.'
-          : 'Your paid subscription is active.';
+      const trialEnd = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at).toLocaleDateString() : '';
+      if (plan === 'trialing' || subscription?.status === 'trialing') {
+        subscriptionNote.textContent = trialEnd
+          ? 'You are on a Pro free trial until ' + trialEnd + '.'
+          : 'You are on a Pro free trial.';
+      } else if (plan === 'plus') {
+        subscriptionNote.textContent = 'You are on Plus.';
+      } else if (plan === 'pro' || subscription?.status === 'active') {
+        subscriptionNote.textContent = subscription?.current_period_ends_at
+          ? 'You are on Pro. Current period ends ' + new Date(subscription.current_period_ends_at).toLocaleDateString() + '.'
+          : 'You are on Pro.';
       } else if (subscription?.status === 'canceled' || subscription?.status === 'past_due') {
-        subscriptionNote.textContent = 'Subscription status: ' + subscription.status + '. You can start a new trial when ready.';
+        subscriptionNote.textContent = 'Subscription status: ' + subscription.status + '.';
       } else {
-        subscriptionNote.textContent = 'You are on the Free plan (3 exports per day). Plus (€3.99) opens the full editor. Pro (€7.99) removes the limits.';
-        const compare = document.getElementById('planCompare');
-        if (compare) {
-          compare.classList.remove('hidden');
-          compare.innerHTML = '<strong>Free · Plus · Pro</strong><br>Free: slowed, sped up, daycore, 3 exports/day · Plus (€3.99): full editor · Pro (€7.99): unlimited exports, cloud, saved presets, 7-day trial.';
-        }
+        subscriptionNote.textContent = 'You are on the Free plan. 3 exports per day.';
       }
       loadHistory();
     }
