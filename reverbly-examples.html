@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
+  <script>document.documentElement.classList.add("motion")</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Examples — Reverbly</title>
@@ -50,10 +50,6 @@
     @media (hover:hover) and (pointer:fine) {
       a.btn { transition:transform .18s ease, filter .18s ease; }
       a.btn:hover { transform:translateY(-2px); }
-    }
-    @media (prefers-reduced-motion:reduce) {
-      main.wrap > h1, main.wrap > .lead { animation:none; }
-      .motion .card { opacity:1; transform:none; }
     }
   </style>
 </head>
