@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Features — Reverbly</title>
@@ -118,6 +119,20 @@
     }
     footer.site-foot { margin-top:48px; padding:28px 0 40px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; color:#998eae; font-size:13px; }
     footer.site-foot a { color:#cdbbff; }
+    @keyframes rise-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    .page-hero .eyebrow { animation:rise-in .55s ease both; }
+    .page-hero h1 { animation:rise-in .7s ease .08s both; }
+    .page-hero p { animation:rise-in .7s ease .16s both; }
+    .motion .feature, .motion section.cta { opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
+    .motion .is-in { opacity:1; transform:none; }
+    @media (hover:hover) and (pointer:fine) {
+      a.primary, a.outline { transition:transform .18s ease, filter .18s ease; }
+      a.primary:hover, a.outline:hover { transform:translateY(-2px); }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      .page-hero .eyebrow, .page-hero h1, .page-hero p { animation:none; }
+      .motion .feature, .motion section.cta { opacity:1; transform:none; }
+    }
 </style>
 </head>
 <body>
@@ -258,6 +273,23 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-C4QZKDYTN4');
+</script>
+<script>
+(function () {
+  var nodes = document.querySelectorAll(".feature, section.cta");
+  if (!document.documentElement.classList.contains("motion") || !("IntersectionObserver" in window)) {
+    nodes.forEach(function (el) { el.classList.add("is-in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-in");
+      io.unobserve(entry.target);
+    });
+  }, { threshold: 0.16 });
+  nodes.forEach(function (el) { io.observe(el); });
+})();
 </script>
 </body>
 </html>
