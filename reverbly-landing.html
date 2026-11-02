@@ -63,7 +63,8 @@
     ul { margin:0 0 25px; padding:0; list-style:none; color:#d8d1e4; } li { margin:11px 0; font-size:14px; } li::before { content:'✓'; color:var(--green); margin-right:9px; }.ad::before { content:'◌'; color:#e7b4ff; }
     .plan .primary,.plan .outline { width:100%; }.fine { margin-top:12px; text-align:center; color:#93869f; font-size:12px; }
     .cta { max-width:850px; margin:35px auto 0; padding:52px 28px; text-align:center; border:1px solid #5b477a; border-radius:22px; background:radial-gradient(circle at 50% -40%,#754c99 0,transparent 64%),#1c142b; }.cta h2 { max-width:550px; margin:0 auto 14px; }.cta p { margin:0 auto 23px; color:var(--muted); max-width:480px; }
-    footer { display:flex; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:32px 0 45px; color:#857a96; font-size:13px; align-items:center; }
+    footer > span a { transition:color .18s ease; }
+    footer > span a:hover { color:#f6f3ff; }
     .socials { display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
     .socials a { display:grid; place-items:center; width:34px; height:34px; border-radius:10px; color:#b7a8d4; background:transparent; border:1px solid transparent; transition:.15s ease; }
     .socials a:hover { color:#f6f3ff; background:#2a2040; border-color:#4a3a68; }
@@ -124,7 +125,7 @@
     
 
   <footer class="wrap">
-    <span>© 2026 Reverbly · <a href="/reverbly-support" style="color:inherit">Support</a> · <a href="/reverbly-privacy" style="color:inherit">Privacy</a> · <a href="/reverbly-terms" style="color:inherit">Terms</a></span>
+    <span>© 2026 Reverbly · <a href="/reverbly-support">Support</a> · <a href="/reverbly-privacy">Privacy</a> · <a href="/reverbly-terms">Terms</a></span>
     <div class="socials" aria-label="Social media">
       <a href="https://www.instagram.com/reverblyapp/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
