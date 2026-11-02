@@ -188,7 +188,7 @@
       const isPaid = plan === 'trialing' || plan === 'pro' || plan === 'plus' ||
         subscription?.status === 'trialing' || subscription?.status === 'active';
       startTrial.classList.toggle('hidden', isPaid);
-      manageBilling.classList.toggle('hidden', !subscription?.stripe_customer_id);
+      manageBilling.classList.remove('hidden');
 
       subscriptionNote.classList.remove('err');
       const trialEnd = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at).toLocaleDateString() : '';
