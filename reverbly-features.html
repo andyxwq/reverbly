@@ -125,7 +125,7 @@
         <a href="/reverbly-examples">Examples</a>
         <a href="/reverbly-pricing">Pricing</a>
         <a href="/reverbly-dashboard">Account</a>
-        <a class="small-btn" href="/reverbly-prototype">Try it free</a>
+        <a class="small-btn" href="/reverbly-prototype" data-editor-cta>Try it free</a>
       </div>
     </nav>
   </div>
@@ -242,5 +242,11 @@
     </div>
     <span>Only upload audio you own or are licensed to use.</span>
   </footer>
+  <script>
+    (function () {
+      try { if (localStorage.getItem('reverbly-seen-editor') !== '1') return; } catch (e) { return; }
+      document.querySelectorAll('[data-editor-cta]').forEach(function (link) { link.textContent = 'Open editor'; });
+    })();
+  </script>
 </body>
 </html>
