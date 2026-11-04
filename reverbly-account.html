@@ -108,7 +108,7 @@
           <div class="confirm-actions">
             <button type="button" class="start" id="confirmTrialBtn">Start Pro trial (7 days) →</button>
             <button type="button" class="secondary-btn" id="confirmPlusBtn" style="width:100%">Get Plus — €3.99/mo</button>
-            <a class="secondary-btn" id="confirmEditorLink" href="/editor" style="text-align:center;text-decoration:none;display:block">Open editor</a>
+            <a class="secondary-btn" id="confirmEditorLink" href="/reverbly-prototype" style="text-align:center;text-decoration:none;display:block">Open editor</a>
             <a class="link-btn" href="/reverbly-dashboard">Go to account</a>
           </div>
         </div>
@@ -120,7 +120,7 @@
             <strong>Plus</strong>
             <span style="color:#cdbbff;font-weight:700">€3.99<span style="color:#b8b1cb;font-weight:500;font-size:13px"> / mo</span></span>
           </div>
-          <p style="margin:8px 0 0;color:#b8b1cb;font-size:13px;line-height:1.45">Every preset, pitch, room or hall, and WAV plus MP3.</p>
+          <p style="margin:8px 0 0;color:#b8b1cb;font-size:13px;line-height:1.45">Every preset, pitch, room or hall, WAV plus MP3, and no ads.</p>
         </div>
         <div style="margin:14px 0;padding:14px;border:1px solid #7a4d8c;border-radius:12px;background:linear-gradient(145deg,#2a1a38,#161022)">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap">
@@ -130,7 +130,7 @@
           <p style="margin:8px 0 0;color:#b8b1cb;font-size:13px;line-height:1.45">Everything in Plus, plus unlimited exports, cloud copies, saved presets, and three versions at once. <strong style="color:#e8dcff">7-day free trial</strong>.</p>
         </div>
         <div class="note"><strong>Cancel anytime.</strong><br>Billing is handled securely by Stripe. Manage or cancel from your account portal.</div>
-        <div class="links"><a href="/reverbly-pricing">Compare plans</a><a href="/editor">Back to editor</a><a href="/reverbly-dashboard">Account</a></div>
+        <div class="links"><a href="/reverbly-pricing">Compare plans</a><a href="/reverbly-prototype">Back to editor</a><a href="/reverbly-dashboard">Account</a></div>
       </aside>
     </section>
   </main>
@@ -336,7 +336,7 @@
       }
 
       if (hasAccess) {
-        window.location.replace('/editor');
+        window.location.replace('/reverbly-prototype');
         return;
       }
 
@@ -364,7 +364,7 @@
       event.preventDefault();
       if (activeSession?.user?.id && mode !== 'recovery') {
         if (accountHasAccess) {
-          window.location.assign('/editor');
+          window.location.assign('/reverbly-prototype');
           return;
         }
         if (window.reverblyTrack) window.reverblyTrack('trial_checkout_start');
